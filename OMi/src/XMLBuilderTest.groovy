@@ -22,6 +22,7 @@ class XMLBuilderTest {
 				services(name:'HPOM', category:'Production', type:'Monitoring'){
 					node('om1.sdab.sn');
 					node('om2.sdab.sn');
+					node('om.sdab.sn');
 				}
 			}
 		}
