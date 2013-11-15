@@ -1,82 +1,15 @@
-import com.hp.opr.api.Version;
-import com.hp.opr.api.ws.adapter.ForwardChangeArgs;
-import com.hp.opr.api.ws.adapter.ForwardEventArgs;
-import com.hp.opr.api.ws.adapter.GetExternalEventArgs;
-import com.hp.opr.api.ws.adapter.InitArgs;
-import com.hp.opr.api.ws.adapter.PingArgs;
-import com.hp.opr.api.ws.adapter.ReceiveChangeArgs;
-import com.hp.opr.api.ws.model.event.OprAnnotationList;
-import com.hp.opr.api.ws.model.event.OprControlTransferInfo;
-import com.hp.opr.api.ws.model.event.OprControlTransferStateEnum;
-import com.hp.opr.api.ws.model.event.OprCustomAttribute;
-import com.hp.opr.api.ws.model.event.OprCustomAttributeList;
-import com.hp.opr.api.ws.model.event.OprEvent;
-import com.hp.opr.api.ws.model.event.OprEventChange;
-import com.hp.opr.api.ws.model.event.OprEventReference;
-import com.hp.opr.api.ws.model.event.OprGroup;
-import com.hp.opr.api.ws.model.event.OprPriority;
-import com.hp.opr.api.ws.model.event.OprSeverity;
-import com.hp.opr.api.ws.model.event.OprState;
-import com.hp.opr.api.ws.model.event.OprSymptomList;
-import com.hp.opr.api.ws.model.event.OprSymptomReference;
-import com.hp.opr.api.ws.model.event.OprUser;
-import com.hp.opr.api.ws.model.event.ci.OprConfigurationItem;
-import com.hp.opr.api.ws.model.event.ci.OprForwardingInfo;
-import com.hp.opr.api.ws.model.event.ci.OprForwardingTypeEnum;
-import com.hp.opr.api.ws.model.event.ci.OprNodeReference;
-import com.hp.opr.api.ws.model.event.ci.OprRelatedCi;
-import com.hp.opr.api.ws.model.event.property.OprAnnotationPropertyChange;
-import com.hp.opr.api.ws.model.event.property.OprCustomAttributePropertyChange;
-import com.hp.opr.api.ws.model.event.property.OprEventPropertyChange;
-import com.hp.opr.api.ws.model.event.property.OprEventPropertyNameEnum;
-import com.hp.opr.api.ws.model.event.property.OprGroupPropertyChange;
-import com.hp.opr.api.ws.model.event.property.OprIntegerPropertyChange;
-import com.hp.opr.api.ws.model.event.property.OprPropertyChangeOperationEnum;
-import com.hp.opr.api.ws.model.event.property.OprSymptomPropertyChange;
-import com.hp.opr.api.ws.model.event.property.OprUserPropertyChange;
-import com.hp.opr.common.ws.client.WinkClientSupport;
-import com.hp.ucmdb.api.UcmdbService;
-import com.hp.ucmdb.api.UcmdbServiceFactory;
-import com.hp.ucmdb.api.UcmdbServiceProvider;
-import com.hp.ucmdb.api.topology.QueryDefinition;
-import com.hp.ucmdb.api.topology.QueryLink;
-import com.hp.ucmdb.api.topology.QueryNode;
-import com.hp.ucmdb.api.topology.Topology;
-import com.hp.ucmdb.api.topology.TopologyCount;
-import com.hp.ucmdb.api.topology.TopologyQueryService;
-import com.hp.ucmdb.api.topology.TopologyUpdateFactory;
-import com.hp.ucmdb.api.topology.indirectlink.IndirectLink;
-import com.hp.ucmdb.api.topology.indirectlink.IndirectLinkStepToPart;
-import com.hp.ucmdb.api.types.TopologyCI;
-import com.hp.ucmdb.api.types.UcmdbId;
-
-import groovy.util.slurpersupport.GPathResult;
-import groovy.xml.MarkupBuilder;
-
-import java.security.cert.X509Certificate;
-import java.text.SimpleDateFormat;
-
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.xml.bind.JAXBElement;
-
-import org.apache.commons.codec.binary.Base64;
-import org.apache.wink.client.ClientRequest;
-import org.apache.wink.client.ClientResponse;
-import org.apache.wink.client.ClientWebException;
-import org.apache.wink.client.Resource;
-import org.apache.wink.client.RestClient;
-
-import java.util.EnumMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.hp.opr.api.ws.model.event.OprEvent;
+import com.hp.opr.api.ws.model.event.ci.OprRelatedCi;
+import com.hp.opr.api.ws.model.event.property.OprIntegerPropertyChange;
+
 public class AstelitRulesSection {
 
-	public boolean isNewIncident;
-	public boolean default_flag;
+	public boolean isNewIncident = false;
+	public boolean default_flag = false;
 	public String astl_related_ci = null;
 	public String astl_ci_os_name = null;
 	public String astl_assignment_group = null;
@@ -163,6 +96,8 @@ public class AstelitRulesSection {
 			astl_ci_os_name = astl_related_ci + " OS";
 		
 //		//## Rule 1:
+			Rule1 r1 = new Rule1();
+			r1.go();
 //		//## RFC C21126: "OVO Agent is using too many system resources" events ##
 //			if (event.category == "Performance" && event.application == "HP OSSPI" && event.object == "CPU_ovagent") {
 //				
@@ -173,6 +108,8 @@ public class AstelitRulesSection {
 //		//############################ END Rule 1 ######################################
 //
 //		//## Rule 2:
+			Rule2 r2 = new Rule2();
+			r2.go();
 //		//########### Policy "ASTL-Billing-Disk-Usage" (C18549) #################
 //			if (event.category == "billing_admin_team" && (MapOPR2SMUrgency[event.severity] == "1" || MapOPR2SMUrgency[event.severity] == "2")) {
 //
@@ -192,6 +129,8 @@ public class AstelitRulesSection {
 //		//############################ END Rule 2 ######################################
 //
 //		//## Rule 3:
+			Rule3 r3 = new Rule3();
+			r3.go();
 //		//######################### SAP Events ##################################
 //			if (event.category == "SAP" && event.application == "SAP" && event.object == "R3AbapShortdumps") {
 //			
@@ -204,6 +143,8 @@ public class AstelitRulesSection {
 //		//############################ END Rule 3 ######################################
 //
 //		//## Rule 4:
+			Rule4 r4 = new Rule4();
+			r4.go();
 //		//######################### TNS Events ##################################
 //			if (event.category == "TADIG" && event.object == "ths_datanet_file_transfer_check.sh" && (MapOPR2SMUrgency[event.severity] == "3")) {
 //			
@@ -218,6 +159,8 @@ public class AstelitRulesSection {
 //		//############################ END Rule 4 ######################################
 //
 //		//## Rule 5:
+			Rule5 r5 = new Rule5();
+			r5.go();
 //		//######################## ABF Events ###################################
 //			if (event.category == "ORGA" && event.application == "ABF" && (MapOPR2SMUrgency[event.severity] == "2" || MapOPR2SMUrgency[event.severity] == "3")) {
 //				
@@ -233,6 +176,8 @@ public class AstelitRulesSection {
 //		//############################ END Rule 5 ######################################
 //
 //		//## Rule 6:
+			Rule6 r6 = new Rule6();
+			r6.go();
 //		//####################### SL3000 Events #################################
 //			if (event.application == "Tape Library" && event.object == "sl3000") {
 //			
@@ -249,6 +194,8 @@ public class AstelitRulesSection {
 //		//############################ END Rule 6 ######################################
 //
 //		//## Rule 7:
+			Rule7 r7 = new Rule7();
+			r7.go();
 //		//######################## EVA Events ###################################
 //
 //			if (astl_related_ci =~ /(?i)EVA/) {
@@ -260,6 +207,8 @@ public class AstelitRulesSection {
 //		//############################ END Rule 7 ######################################
 //
 //		//## Rule 8:
+			Rule8 r8 = new Rule8();
+			r8.go();
 //		//##################### AIS Reboot Events ###############################
 //			if (event.category == "Monitor" && event.application == "MonitorLoger" && (MapOPR2SMUrgency[event.severity] == "3")) {
 //				astl_logical_name = event.object;
@@ -271,6 +220,8 @@ public class AstelitRulesSection {
 //		//############################ END Rule 8 ######################################
 //
 //		//## Rule 9:
+			Rule9 r9 = new Rule9();
+			r9.go();
 //		//##################### Performance Events ##############################
 //			if (event.category == "Performance" || event.object == "Connection_check") {
 //				astl_logical_name = astl_ci_os_name;
@@ -281,6 +232,8 @@ public class AstelitRulesSection {
 //		//############################ END Rule 9 ######################################
 //
 //		//## Rule 10:
+			Rule10 r10 = new Rule10();
+			r10.go();
 //		//##################### Temperature Events ##############################
 //			if (event.application == "Temp mon") {
 //				if (event.title =~ /Temperature was changed/) {
@@ -303,6 +256,8 @@ public class AstelitRulesSection {
 //		//############################ END Rule 10 ######################################
 //
 //		//## Rule 11:
+			Rule11 r11 = new Rule11();
+			r11.go();
 //		//###################### SAN Disk Events ################################
 //			if (event.category == "Hardware" && event.application == "SANdisk" && (MapOPR2SMUrgency[event.severity] == "2")) {
 //				
@@ -315,6 +270,8 @@ public class AstelitRulesSection {
 //		//############################ END Rule 11 ######################################
 //
 //		//## Rule 12:
+			Rule12 r12 = new Rule12();
+			r12.go();
 //		//####################### HP SIM Events #################################
 //			if (event.category == "HP_SIM" && event.application == "HP_SIM") {
 //
@@ -851,73 +808,347 @@ public class AstelitRulesSection {
 	
 	class Rule1 {
 		void go(){
+			if (event.getCategory().equals("Performance") && event.getApplication().equals("HP OSSPI") && event.getObject().equals("CPU_ovagent")) {
 			
+			astl_assignment_group = "SN-IO-ITM";
+			
+			default_flag = false;
+		}
 		}
 	}
 
 	class Rule2 {
 		void go(){
-			
+			if (event.getCategory().equals("billing_admin_team") && (MapOPR2SMUrgency.get(event.getSeverity()).equals("1") || MapOPR2SMUrgency.get(event.getSeverity()).equals("2"))) {
+
+				astl_logical_name = event.getApplication();
+				astl_operational_device = true;
+				
+				if (MapOPR2SMUrgency.get(event.getSeverity()).equals("1")) {
+					astl_priority = "2";
+				}
+				
+				if (MapOPR2SMUrgency.get(event.getSeverity()).equals("2")) {
+					astl_priority = "3";
+				}
+				
+				default_flag = false;
+			}
 		}
 	}
 	
 	class Rule3 {
 		void go(){
+			if (event.getCategory().contains("SAP") && event.getApplication().equals("SAP") && event.getObject().equals("R3AbapShortdumps")) {
 			
+				astl_logical_name = "sapUKP";
+				astl_operational_device = true;
+				astl_priority = "4";
+				
+				default_flag = false;
+			}
 		}
 	}
 	
 	class Rule4 {
 		void go(){
+			if (event.getCategory().equals("TADIG") && event.getObject().equals("ths_datanet_file_transfer_check.sh") && (MapOPR2SMUrgency.get(event.getSeverity()).equals("3"))) {
 			
+				astl_logical_name = " ";
+				astl_assignment_group = "SN-AO-CSP-SSR";
+				astl_title = "THS-NRTRDE file transfer delay";
+				astl_operational_device = true;
+				astl_priority = "4";
+				
+				default_flag = false;
+			}
 		}
 	}
 
 	class Rule5 {
 		void go(){
+			if (event.getCategory() == "ORGA" && event.getApplication() == "ABF" && (MapOPR2SMUrgency.get(event.getSeverity()).equals("2") || MapOPR2SMUrgency.get(event.getSeverity()).equals("3"))) {
 			
+			astl_assignment_group = "SN-AO-SCC";
+			astl_logical_name = "ABF application";
+			astl_category = "Service Platforms";
+			astl_sub_category = "ABF";
+			
+			astl_priority = "4";
+			
+			default_flag = false;
+		}	
 		}
 	}
 	
 	class Rule6 {
 		void go(){
-			
+			if (event.getApplication().equals("Tape Library") && event.getObject().equals("sl3000")) {
+				
+					astl_logical_name = "SL3K";
+					astl_title = "SL3K Drive not unloaded for fetch - on rewindUnload";
+					astl_description = "SL3K Drive not unloaded for fetch - on rewindUnload";
+					astl_category = "Infrastructure";
+					astl_sub_category = "Backups - Hardware";
+					astl_operational_device = true;
+					astl_priority = "4";
+				
+					default_flag = false;
+				}
 		}
 	}
 	
 	class Rule7 {
+		Pattern r7Pattern = null;
+		Matcher r7Matcher = null;
 		void go(){
+			r7Pattern = Pattern.compile("(?i)EVA");
+			r7Matcher = r7Pattern.matcher(astl_related_ci);
+			if (r7Matcher.matches()) {
+			astl_category = "Infrastructure";
+			astl_sub_category = "Storage";
 			
+			default_flag = false;
+		}
 		}
 	}
 	
 	class Rule8 {
 		void go(){
+			if (event.getCategory() == "Monitor" && event.getApplication() == "MonitorLoger" && (MapOPR2SMUrgency.get(event.getSeverity()).equals("3"))) {
+			astl_logical_name = event.getObject();
+			astl_title = "Host ${event.object} was rebooted";
+			astl_priority = "3";
 			
+			default_flag = false;
+		}
 		}
 	}
 	
 	class Rule9 {
 		void go(){
+			if (event.getCategory().equals("Performance") || event.getObject().equals("Connection_check")) {
+			astl_logical_name = astl_ci_os_name;
+			astl_operational_device = true;
 			
+			default_flag = false;
+		}
 		}
 	}
 	
 	class Rule10 {
+		Pattern r10Pattern1 = null;
+		Pattern r10Pattern2 = null;
+		Pattern r10Pattern3 = null;
+		Matcher r10Matcher1 = null;
+		Matcher r10Matcher2 = null;
+		Matcher r10Matcher3 = null;
 		void go(){
-			
+			if (event.getApplication().equals("Temp mon")) {
+				r10Pattern1 = Pattern.compile("Temperature was changed");
+				r10Matcher1 = r10Pattern1.matcher(event.getTitle());
+				if (r10Matcher1.matches()) {
+					astl_priority = "3";
+				}
+				r10Pattern2 = Pattern.compile("is more then max threshold");
+				r10Matcher2 = r10Pattern2.matcher(event.getTitle());
+				if (r10Matcher2.matches()) {
+					astl_priority = "2";
+				}
+				r10Pattern3 = Pattern.compile("is lower then min threshold");
+				r10Matcher3 = r10Pattern3.matcher(event.getTitle());
+				if (r10Matcher3.matches()) {
+					astl_priority = "2";
+				}
+				
+				astl_logical_name = event.getObject();
+				astl_operational_device = true;
+				
+				default_flag = false;
+			}
 		}
 	}
 	
 	class Rule11 {
 		void go(){
+			if (event.getCategory().equals("Hardware") && event.getApplication().equals("SANdisk") && (MapOPR2SMUrgency.get(event.getSeverity()).equals("2"))) {
 			
+			astl_assignment_group = "SN-IO-SSDA-SA";
+			astl_operational_device = true;
+			astl_priority = "1";
+			
+			default_flag = false;
+		}
 		}
 	}
 	
 	class Rule12 {
+		Pattern caseHPc20191Pattern = null;
+		Pattern serviceGuardPattern = null;
+		Pattern ciOutagePattern = null;
+		Pattern incompletePattern = null;
+		Pattern hp1Pattern = null;
+		Pattern hp2Pattern = null;
+		Pattern hp3Pattern = null;
+		Pattern hp4Pattern = null;
+		Pattern hp5Pattern = null;
+		Pattern hp6Pattern = null;
+		Pattern hp7Pattern = null;
+		Pattern hp8Pattern = null;
+		Pattern hp9Pattern = null;
+		Pattern wmiEventsPattern1 = null;
+		Pattern wmiEventsPattern2 = null;
+		Pattern wmiEventsPattern3 = null;
+		Pattern snmpTrapPattern = null;
+		Pattern latencyBottleneckPattern1 = null;
+		Pattern latencyBottleneckPattern2 = null;
+		Pattern an1Pattern = null;
+		Pattern an2Pattern = null;
+		Pattern an3Pattern = null;
+		Matcher caseHPc20191Matcher = null;
+		Matcher serviceGuardMatcher = null;
+		Matcher ciOutageMatcher = null;
+		Matcher incompleteMatcher = null;
+		Matcher hp1Matcher = null;
+		Matcher hp2Matcher = null;
+		Matcher hp3Matcher = null;
+		Matcher hp4Matcher = null;
+		Matcher hp5Matcher = null;
+		Matcher hp6Matcher = null;
+		Matcher hp7Matcher = null;
+		Matcher hp8Matcher = null;
+		Matcher hp9Matcher = null;
+		Matcher wmiEventsMatcher1 = null;
+		Matcher wmiEventsMatcher2 = null;
+		Matcher wmiEventsMatcher3 = null;
+		Matcher snmpTrapMatcher = null;
+		Matcher latencyBottleneckMatcher1 = null;
+		Matcher latencyBottleneckMatcher2 = null;
+		Matcher an1Matcher = null;
+		Matcher an2Matcher = null;
+		Matcher an3Matcher = null;
+		String astl_object = null;
+		
+		public Rule12(){
+			astl_object = event.getObject();
+		}
+		
 		void go(){
-			
+			//####################### HP SIM Events #################################
+			if (event.getCategory().equals("HP_SIM") && event.getApplication().equals("HP_SIM")) {
+
+				astl_logical_name = event.getObject();
+				astl_sub_category = "HP SIM";
+
+				//# HP SIM events with opened CASE in the HP (C20191)
+				caseHPc20191Pattern = Pattern.compile("SEA Version:System Event Analyzer for Windows");
+				caseHPc20191Matcher = caseHPc20191Pattern.matcher(event.getTitle());
+				if (caseHPc20191Matcher.matches()){
+					astl_operational_device = true;
+				}
+				//# Configuring Auto Incidents from Serviceguad cluster (C20026)
+				serviceGuardPattern  = Pattern.compile("hpmcSG");
+				serviceGuardMatcher = serviceGuardPattern.matcher(event.getTitle());
+				if (serviceGuardMatcher.matches()) {
+					astl_logical_name = astl_ci_os_name;
+				}
+				ciOutagePattern = Pattern.compile("(NO_SERVER_CI_OUTAGE_FLAG)(.*)");
+				ciOutageMatcher = ciOutagePattern.matcher(event.getTitle());
+			//	myMatcher = (event.title =~ /(NO_SERVER_CI_OUTAGE_FLAG)(.*)/);
+				if (ciOutageMatcher.matches()) {
+					astl_operational_device = true;
+					astl_description = ciOutageMatcher.group(2);
+				}
+				incompletePattern = Pattern.compile("Incomplete OA XML Data");
+				incompleteMatcher = incompletePattern.matcher(event.getTitle());
+			if (incompleteMatcher.matches()) {
+					astl_priority = "4";
+				}
+				
+			hp1Pattern = Pattern.compile("(SNMP) Process Monitor Event Trap (11011)");
+			hp2Pattern = Pattern.compile("HP ProLiant-HP Power-Power Supply Failed");
+			hp3Pattern = Pattern.compile("cpqHe4FltTolPowerSupplyDegraded");
+			hp4Pattern = Pattern.compile("cpqHe4FltTolPowerSupplyFailed");
+			hp5Pattern = Pattern.compile("(WBEM) Power redundancy reduced");
+			hp6Pattern = Pattern.compile("(WBEM) Power Supply Failed");
+			hp7Pattern = Pattern.compile("(WBEM) Power redundancy lost");
+			hp8Pattern = Pattern.compile("(SNMP)  Power Supply Failed (6050)");
+			hp9Pattern = Pattern.compile("(SNMP)  Power Redundancy Lost (6032)");
+			hp1Matcher = hp1Pattern.matcher(event.getTitle());
+			hp2Matcher = hp2Pattern.matcher(event.getTitle());
+			hp3Matcher = hp3Pattern.matcher(event.getTitle());
+			hp4Matcher = hp4Pattern.matcher(event.getTitle());
+			hp5Matcher = hp5Pattern.matcher(event.getTitle());
+			hp6Matcher = hp6Pattern.matcher(event.getTitle());
+			hp7Matcher = hp7Pattern.matcher(event.getTitle());
+			hp8Matcher = hp8Pattern.matcher(event.getTitle());
+			hp9Matcher = hp9Pattern.matcher(event.getTitle());
+			//	if (event.title =~ /(\(SNMP\) Process Monitor Event Trap \(11011\)|HP ProLiant-HP Power-Power Supply Failed|cpqHe4FltTolPowerSupplyDegraded|cpqHe4FltTolPowerSupplyFailed|\(WBEM\) Power redundancy reduced|\(WBEM\) Power redundancy lost|\(WBEM\) Power Supply Failed|\(SNMP\)  Power Supply Failed \(6050\)|\(SNMP\)  Power Redundancy Lost \(6032\))/)
+			if (hp1Matcher.matches() || hp2Matcher.matches() || hp3Matcher.matches() || hp4Matcher.matches() || hp5Matcher.matches() || hp6Matcher.matches() || hp7Matcher.matches() || hp8Matcher.matches() || hp9Matcher.matches())
+					 { astl_operational_device = true;}
+				
+				//# For WMI Events. If string Brief Description is in Message text
+			//	myMatcher = (event.title =~ /Brief Description:\n\s(.*)/)
+			wmiEventsPattern1 = Pattern.compile("Brief Description:\\n\\s(.*)");
+			wmiEventsMatcher1 = wmiEventsPattern1.matcher(event.getTitle());
+				if (wmiEventsMatcher1.matches()){
+					astl_title = wmiEventsMatcher1.group(1);
+				}
+				//# For SNMP Traps. If string Event Name is in Message text
+			//	myMatcher = (event.title =~ /Event Name:\s(.*)/);
+				snmpTrapPattern = Pattern.compile("Event Name:\\s(.*)");
+				snmpTrapMatcher = snmpTrapPattern.matcher(event.getTitle());
+				if (snmpTrapMatcher.matches()){
+					astl_title = snmpTrapMatcher.group(1);
+				}
+				//# For WMI Events. If string Summary is in Message text
+			//	myMatcher = (event.title =~ /Summary:\s(.*)/);
+				wmiEventsPattern2 = Pattern.compile("Summary:\\s(.*)");
+				wmiEventsMatcher2 = wmiEventsPattern2.matcher(event.getTitle());
+				if (wmiEventsMatcher2.matches()){
+					astl_title = wmiEventsMatcher2.group(2);
+				}
+				//# For WMI Events. If string Caption is in Message text
+			//	myMatcher = (event.title =~ /Caption:\s(.*)/);
+				wmiEventsPattern3 = Pattern.compile("Caption:\\s(.*)");
+				wmiEventsMatcher3 = wmiEventsPattern3.matcher(event.getTitle());
+				if (wmiEventsMatcher3.matches()) {
+					astl_title = wmiEventsMatcher3.group(1);
+				}
+				latencyBottleneckPattern1 = Pattern.compile("Severe latency bottleneck");
+				latencyBottleneckPattern2 = Pattern.compile("is a congestion bottleneck");
+				latencyBottleneckMatcher1 = latencyBottleneckPattern1.matcher(event.getTitle());
+				latencyBottleneckMatcher2 = latencyBottleneckPattern2.matcher(event.getTitle());
+				if (latencyBottleneckMatcher1.matches() || latencyBottleneckMatcher2.matches()) {
+					astl_assignment_group = "SN-IO-SSDA-SB";
+					astl_category = "Infrastructure";
+					astl_sub_category = "SAN Switch";
+					astl_operational_device = true;
+					
+					an1Pattern = Pattern.compile(".*(.*AN-.*Slot.*, port.*is a congestion bottleneck)");
+					an1Matcher = an1Pattern.matcher(event.getTitle());
+				// = (event.title =~ /.*(.*AN-.*Slot.*, port.*is a congestion bottleneck)/);
+					if (an1Matcher.matches()) {
+						astl_title = astl_object + " " + an1Matcher.group(1);
+						
+						an2Pattern = Pattern.compile(".*(.*AN-.*Slot.*, port.*is a congestion bottleneck.*percent of last.*seconds were affected by this condition.)");
+							an2Matcher = an2Pattern.matcher(event.getTitle());	
+					//	myMatcher = (event.title =~ /.*(.*AN-.*Slot.*, port.*is a congestion bottleneck.*percent of last.*seconds were affected by this condition.)/);
+						if (an2Matcher.matches())
+							//astl_description =    "${astl_object} ${myMatcher[0][1]}";
+							astl_description = astl_object + " " + an2Matcher.group(1);
+					}
+						
+					an3Pattern = Pattern.compile(".*(AN-.*Severe latency bottleneck detected at Slot.*port.*)");
+					an3Matcher = an3Pattern.matcher(event.getTitle());
+				//	myMatcher = (event.title =~ /.*(AN-.*Severe latency bottleneck detected at Slot.*port.*)/);
+					if (an3Matcher.matches()) {
+						astl_title = astl_object + an3Matcher.group(1);
+						astl_description = astl_object + an3Matcher.group(1);
+					}
+				}
+				default_flag = false;
+			}
 		}
 	}
 	
