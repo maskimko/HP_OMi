@@ -471,6 +471,7 @@ public class ServiceManagerAdapter {
     private boolean astl_operational_device = false
     //TODO  fix astl_operational_device
     //SCHEREPE TEST
+    //SCHEREPE TEST
 
 
 
