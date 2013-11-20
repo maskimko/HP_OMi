@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="ucmdb-api">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/OMi/libs/ucmdb-api.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/OMi/libs/ucmdb-api.jar!/" />
+    </SOURCES>
+  </library>
+</component>

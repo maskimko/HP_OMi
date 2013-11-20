@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="geronimo-jaxrs_1.1_spec-1.0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/OMi/libs/geronimo-jaxrs_1.1_spec-1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

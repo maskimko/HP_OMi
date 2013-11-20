@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="opr-common">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/OMi/libs/opr-common.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

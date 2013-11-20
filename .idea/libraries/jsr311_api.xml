@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="jsr311-api">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/OMi/libs/jsr311-api.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

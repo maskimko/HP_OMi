@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="opr-internal-api">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/OMi/libs/opr-internal-api.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
