@@ -251,13 +251,13 @@ public class ServiceManagerAdapter {
     //
     // NOTE: Only top-level SM incident properties are supported in this map.
     // EXAMPLE: ["MyCustomCA" : "activity_log", "MyCustomCA_1" : "SMCustomAttribute" ]
-    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice", "some_test_attribute": "SomeTestAttribute",  "SMTestKey" : "TestKey"]
+    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice", "OperationalDevice": "operational_device", "some_test_attribute": "SomeTestAttribute",  "SMTestKey" : "TestKey"]
 
     // Map the specified SM incident properties to an OPR event custom attribute for synchronization.
     // Add an SM incident property name to the map along with OPR event custom attribute name.
     //
     // EXAMPLE: ["incident_status" : "SMIncidentStatus"]
-    private static final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device", "some_test_attribute": "SomeTestAttribute", "SMTestKey" : "TestKey"]
+    private static final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device", "operational_device": "OperationalDevice", "some_test_attribute": "SomeTestAttribute", "SMTestKey" : "TestKey"]
 
     // **********************************************************************
     // * END Configuration: Customization of properties for synchronization *
@@ -499,7 +499,7 @@ public class ServiceManagerAdapter {
                     (syncAllSMStatusToOPR || SyncSMStatusToOPR.contains("closed"))))
 
     // Important to use "def" here, otherwise a cast exception will be thrown and the m_log is set to <null>
-    def m_log
+   private  def m_log
 
 
 
@@ -603,6 +603,19 @@ public class ServiceManagerAdapter {
             final String name = entry.key.toLowerCase(LOCALE)
             final String value = entry.value
             m_OPR2SMCustomAttribute.put(name, value)
+
+
+            /*
+            Adding our second generation custom attributes
+             */
+           /*
+            HashMap<String, String> testMap = new HashMap<String, String>();
+            testMap.put("TestKey", "TestValue");
+            addCustomAttribute(event, testMap);
+             */
+
+
+
         }
 
         m_log = args.logger
@@ -1939,13 +1952,6 @@ public class ServiceManagerAdapter {
             if (event.category == "Time" && event.application == "NTP" && event.object == "Time") {
                 astl_logical_name = astl_ci_os_name
                 astl_operational_device = true
-                /*
-                Just for testing purposes
-                 */
-                HashMap<String, String> testMap = new HashMap<String, String>();
-                testMap.put("TestKey", "TestValue");
-                addCustomAttribute(event, testMap);
-
                 default_flag = false
             }
             //############################ END Rule 22 ######################################
@@ -2210,10 +2216,13 @@ public class ServiceManagerAdapter {
             //############################ END Rule 35 ######################################
         }
 //##################################### END ASTELIT RULES SECTION ##################################
-
+           //TODO Custom section
 //##################################### ASTELIT CUSTOM SECTION #####################################
         if (!default_flag) {
 
+
+
+            //FIXME Truncater to cope from delev package
             // get the title & description.
             String title = (event.title && event.title.trim()) ? event.title.trim().replace('\r', '\n') : null
             String description = (event.description && event.description.trim()) ? event.description.trim() : null
@@ -2255,7 +2264,7 @@ public class ServiceManagerAdapter {
                 builder.incident_type(INCIDENT_TYPE)
                 if (SpecifyActiveProcess)
                     builder.active_process("true")
-
+                  //TODO Move this to custom attribute
                 builder."${OPERATIONAL_DEVICE_TAG}"(astl_operational_device)
 
                 activityLog.append('\n').append(ACTIVITY_LOG_OPERATIONAL_DATA).append('\n').
@@ -2729,6 +2738,15 @@ public class ServiceManagerAdapter {
                 }
 
                 // check if there are any custom attributes to add to the activity log
+
+                 //TODO Add debug to custom section
+
+                if (m_log.isDebugEnabled) {
+                      m_log.debug("Beginning of adding custom attributes ");
+                       m_log.debug("Add OperationalDevice attribute") ;
+                    addCustomAttribute(event, new HashMap<String, String>().put("OperationalDevice", "Yes my capitan!"));
+
+                }
                 if (!m_OPR2SMCustomAttribute.isEmpty() && (event.customAttributes != null)) {
                     event.customAttributes.customAttributes?.each() { OprCustomAttribute customAttribute ->
                         final String caName = customAttribute.name.toLowerCase(LOCALE)
@@ -2827,7 +2845,7 @@ public class ServiceManagerAdapter {
 
         }
 //##################################### END ASTELIT CUSTOM SECTION #####################################
-
+   //TODO Default section
 //##################################### DEFAULT SECTION #####################################
         if (default_flag) {
 
