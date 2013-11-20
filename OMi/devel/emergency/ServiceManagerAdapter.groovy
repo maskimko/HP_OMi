@@ -251,13 +251,13 @@ public class ServiceManagerAdapter {
     //
     // NOTE: Only top-level SM incident properties are supported in this map.
     // EXAMPLE: ["MyCustomCA" : "activity_log", "MyCustomCA_1" : "SMCustomAttribute" ]
-    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice", "some_test_attribute": "SomeTestAttribute", "TestKey": "SMTestKey"]
+    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice", "some_test_attribute": "SomeTestAttribute",  "SMTestKey" : "TestKey"]
 
     // Map the specified SM incident properties to an OPR event custom attribute for synchronization.
     // Add an SM incident property name to the map along with OPR event custom attribute name.
     //
     // EXAMPLE: ["incident_status" : "SMIncidentStatus"]
-    private static final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device", "some_test_attribute": "SomeTestAttribute", "TestKey": "SMTestKey"]
+    private static final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device", "some_test_attribute": "SomeTestAttribute", "SMTestKey" : "TestKey"]
 
     // **********************************************************************
     // * END Configuration: Customization of properties for synchronization *
