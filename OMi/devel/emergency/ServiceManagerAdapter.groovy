@@ -518,7 +518,8 @@ public class ServiceManagerAdapter {
             m_log.info("Diving into addCustomAttribute method")
         }
 
-        //My own comment
+        //My own comment  for Sergey Cherepenin
+
 
         try {
             if (event.getCustomAttributes() == null) {
