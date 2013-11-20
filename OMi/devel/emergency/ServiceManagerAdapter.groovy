@@ -2741,7 +2741,7 @@ public class ServiceManagerAdapter {
 
                  //TODO Add debug to custom section
 
-                if (m_log.isDebugEnabled) {
+                if (m_log.isDebugEnabled()) {
                       m_log.debug("Beginning of adding custom attributes ");
                        m_log.debug("Add OperationalDevice attribute") ;
                     addCustomAttribute(event, new HashMap<String, String>().put("OperationalDevice", "Yes my capitan!"));
