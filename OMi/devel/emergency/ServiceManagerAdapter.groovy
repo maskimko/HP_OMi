@@ -538,11 +538,14 @@ public class ServiceManagerAdapter {
                 attributeArrayList.add(oca);
 
                 if (m_log.isDebugEnabled()) {
-                    m_log.debug("Adding custom attribute " + attributeName + " with valuse " + attributeValue);
+                    m_log.debug("Adding custom attribute " + attributeName + " with value " + attributeValue);
                     m_log.debug(oca);
                 }
             }
-            //customAttributeList.setAnyAttribute(customAttributes);
+            /*
+            Changed Method to    setCustomAttributes
+             */
+            customAttributeList.setCustomAttributes(attributeArrayList);
             event.setCustomAttributes(customAttributeList);
 
 
