@@ -251,13 +251,13 @@ public class ServiceManagerAdapter {
     //
     // NOTE: Only top-level SM incident properties are supported in this map.
     // EXAMPLE: ["MyCustomCA" : "activity_log", "MyCustomCA_1" : "SMCustomAttribute" ]
-    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device" : "OperationalDevice", "some_test_attribute":"SomeTestAttribute", "TestKey":"SMTestKey"]
+    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice", "some_test_attribute": "SomeTestAttribute", "TestKey": "SMTestKey"]
 
     // Map the specified SM incident properties to an OPR event custom attribute for synchronization.
     // Add an SM incident property name to the map along with OPR event custom attribute name.
     //
     // EXAMPLE: ["incident_status" : "SMIncidentStatus"]
-    private static final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device",  "some_test_attribute":"SomeTestAttribute", "TestKey":"SMTestKey"]
+    private static final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device", "some_test_attribute": "SomeTestAttribute", "TestKey": "SMTestKey"]
 
     // **********************************************************************
     // * END Configuration: Customization of properties for synchronization *
@@ -464,17 +464,9 @@ public class ServiceManagerAdapter {
     private String m_home = ''
     private Integer m_oprVersion = 0
 
-
-
     //////////////Custom boolean section
     //TODO  fix astl_operational_device
     private boolean astl_operational_device = false
-
-
-
-
-
-
 
     // Maintain Cookies
     private Set<Cookie> m_smCookies = new HashSet<Cookie>()
@@ -509,44 +501,58 @@ public class ServiceManagerAdapter {
 
 
 
-    private synchronized void addCustomAttribute(OprEvent event, Map<String, String> customAttributes){
+    private synchronized void addCustomAttribute(OprEvent event, Map<String, String> customAttributes) {
 
         String attributeName = null;
         String attributeValue = null;
         OprCustomAttribute oca = null;
         OprCustomAttributeList customAttributeList = null;
 
+        ArrayList<OprCustomAttribute> attributeArrayList = new ArrayList<OprCustomAttribute>();
 
 
         if (m_log.isInfoEnabled()) {
             m_log.info("Diving into addCustomAttribute method")
         }
 
+        //My own comment
+
         try {
             if (event.getCustomAttributes() == null) {
                 customAttributeList = new OprCustomAttributeList();
-              //  event.setCustomAttributes(customAttributeList);
             } else {
                 customAttributeList = event.getCustomAttributes();
             }
 
-            Iterator attrIter = customAttributes.entrySet().iterator();
+            Iterator attributeIterator = customAttributes.entrySet().iterator();
 
-            while (attrIter.hasNext()){
-                Map.Entry pair  = attrIter.next();
+            while (attributeIterator.hasNext()) {
+                Map.Entry pair = attributeIterator.next();
                 attributeName = pair.getKey();
                 attributeValue = pair.getValue();
                 oca = new OprCustomAttribute(attributeName, attributeValue);
-                customAttributeList.setAnyAttribute(oca.anyAttribute);
+                attributeArrayList.add(oca);
+
                 if (m_log.isDebugEnabled()) {
                     m_log.debug("Adding custom attribute " + attributeName + " with valuse " + attributeValue);
+                    m_log.debug(oca);
                 }
             }
             //customAttributeList.setAnyAttribute(customAttributes);
             event.setCustomAttributes(customAttributeList);
 
-            if (m_log.isDebugEnabled()){
-                m_log.debug(event.getCustomAttributes().getAnyAttribute() )  ;
+
+
+            if (m_log.isDebugEnabled()) {
+                m_log.debug("Post adding custom attribute checking section Start")
+                Iterator checkingIterator = event.getCustomAttributes().getCustomAttributes().iterator();
+                while (checkingIterator.hasNext()) {
+                    OprCustomAttribute currentAttribute = checkingIterator.next();
+                    m_log.debug("Custom attribute " + currentAttribute.getName() + " with value " + currentAttribute.getValue());
+                }
+                m_log.debug("Debug of iterator")    ;
+                m_log.debug(checkingIterator)      ;
+                m_log.debug("Post adding custom attribute checking section End")   ;
 
             }
 
@@ -784,8 +790,7 @@ public class ServiceManagerAdapter {
                             linkCauseIncident(symptomExternalRefId, cause, extId, args.credentials)
                     }
                 }
-            }
-            else
+            } else
                 return
         }
         m_log.debug("***End Bulk Forward***")
@@ -877,8 +882,7 @@ public class ServiceManagerAdapter {
             if (updateIncident != null) {
                 if (m_log.isDebugEnabled())
                     m_log.debug("Service Manager Incident updated: ${updateIncident}")
-            }
-            else
+            } else
                 m_log.error("Update of Incident cause link failed.")
         }
         catch (ClientWebException e) {
@@ -906,8 +910,7 @@ public class ServiceManagerAdapter {
         if (forwardingType.equals(OprForwardingTypeEnum.synchronize_and_transfer_control.toString())) {
             externalRefId =
                 "urn:x-hp:2009:opr:${m_connectedServerId}:incident|escalated|provider:${event.id}"
-        }
-        else {
+        } else {
             externalRefId =
                 "urn:x-hp:2009:opr:${m_connectedServerId}:incident|informational|requestor:${event.id}"
         }
@@ -932,8 +935,7 @@ public class ServiceManagerAdapter {
             if (response) {
                 if (m_log.isDebugEnabled())
                     m_log.debug("Service Manager Incident created:\n${response}")
-            }
-            else
+            } else
                 m_log.warn("Null response returned by server.")
         }
         catch (ClientWebException e) {
@@ -1114,8 +1116,7 @@ public class ServiceManagerAdapter {
                                 causeExternalRefId = causeInfo?.externalId
                             }
                             anyAttributeWasChanged = true
-                        }
-                        else
+                        } else
                             event.cause = null
                         break
                     case OprEventPropertyNameEnum.symptom:
@@ -1226,8 +1227,7 @@ public class ServiceManagerAdapter {
                             }
                         }
                     }
-                }
-                else {
+                } else {
                     m_log.warn("Null response returned by server.")
                     result = false
                 }
@@ -1380,8 +1380,7 @@ public class ServiceManagerAdapter {
                     return true
                 }
                 return false
-            }
-            else {
+            } else {
                 return false
             }
         }
@@ -1428,7 +1427,7 @@ public class ServiceManagerAdapter {
             xmlResult.getProperty('content').getProperty(INCIDENT_TAG) : xmlResult
 
         if (incident.name().equals(INCIDENT_TAG)) {
-            incident.childNodes().each {child ->
+            incident.childNodes().each { child ->
 
                 String propertyName = child.name
                 String propertyValue = child.text()
@@ -1515,8 +1514,7 @@ public class ServiceManagerAdapter {
                 }
             }
             return true
-        }
-        else
+        } else
             return false
     }
 
@@ -1539,10 +1537,10 @@ public class ServiceManagerAdapter {
  * @param externalRefId and processing status
  * @return the converted external event object
  */
-    public  String toExternalEvent(final OprEvent event,
-                                   final String externalRefId,
-                                   final String causeExternalRefId,
-                                   final OprIntegerPropertyChange duplicateChange) {
+    public String toExternalEvent(final OprEvent event,
+                                  final String externalRefId,
+                                  final String causeExternalRefId,
+                                  final OprIntegerPropertyChange duplicateChange) {
         if (event == null)
             return null
 
@@ -1814,7 +1812,7 @@ public class ServiceManagerAdapter {
                 myMatcher = (event.title =~ /.*SOURCE.*"(.*AMS.*)".*STATUS.*COMPONENT.*"(Disk Drive.*)".*DESCRIPTION.*/)
                 if (myMatcher.matches()) {
                     astl_logical_name = myMatcher[0][1]
-                    astl_title = myMatcher[0][1]+" "+myMatcher[0][2]+" fail."
+                    astl_title = myMatcher[0][1] + " " + myMatcher[0][2] + " fail."
                 }
 
                 default_flag = false
@@ -1934,9 +1932,9 @@ public class ServiceManagerAdapter {
             if (event.category == "Time" && event.application == "NTP" && event.object == "Time") {
                 astl_logical_name = astl_ci_os_name
                 astl_operational_device = true
-                  /*
-                  Just for testing purposes
-                   */
+                /*
+                Just for testing purposes
+                 */
                 HashMap<String, String> testMap = new HashMap<String, String>();
                 testMap.put("TestKey", "TestValue");
                 addCustomAttribute(event, testMap);
@@ -2137,7 +2135,6 @@ public class ServiceManagerAdapter {
             }
             //############################ END Rule 30 ######################################
 
-
             //## Rule 31
             //########### Policy "ASTL-MRTE-IncoreDB-usage" (C16928) ################
             if (event.category == "MRTE" && (event.application == "mrte1a" || event.application == "mrte2a") && MapOPR2SMUrgency[event.severity] == "1") {
@@ -2258,29 +2255,29 @@ public class ServiceManagerAdapter {
                         append(astl_operational_device).append('\n')
 
                 if (astl_priority) {
-                    if(astl_priority == "1"){
+                    if (astl_priority == "1") {
                         builder."${IMPACT_SCOPE_TAG}"(label: "Enterprise", 'enterprise')
                     }
-                    if(astl_priority == "2"){
+                    if (astl_priority == "2") {
                         builder."${IMPACT_SCOPE_TAG}"(label: "Site/Dept", 'site-dept')
                     }
-                    if(astl_priority == "3"){
+                    if (astl_priority == "3") {
                         builder."${IMPACT_SCOPE_TAG}"(label: "Multiple Users", 'multiple-users')
                     }
-                    if(astl_priority == "4"){
+                    if (astl_priority == "4") {
                         builder."${IMPACT_SCOPE_TAG}"(label: "User", 'user')
                     }
                 } else {
-                    if(MapOPR2SMUrgency[event.severity] == "1"){
+                    if (MapOPR2SMUrgency[event.severity] == "1") {
                         builder."${IMPACT_SCOPE_TAG}"(label: "Site/Dept", 'site-dept')
                     }
-                    if(MapOPR2SMUrgency[event.severity] == "2"){
+                    if (MapOPR2SMUrgency[event.severity] == "2") {
                         builder."${IMPACT_SCOPE_TAG}"(label: "Multiple Users", 'multiple-users')
                     }
-                    if(MapOPR2SMUrgency[event.severity] == "3"){
+                    if (MapOPR2SMUrgency[event.severity] == "3") {
                         builder."${IMPACT_SCOPE_TAG}"(label: "User", 'user')
                     }
-                    if(MapOPR2SMUrgency[event.severity] == "4"){
+                    if (MapOPR2SMUrgency[event.severity] == "4") {
                         builder."${IMPACT_SCOPE_TAG}"(label: "User", 'user')
                     }
                 }
@@ -2388,8 +2385,7 @@ public class ServiceManagerAdapter {
                         if (dnsName)
                             activityLog.append('\n').append(ACTIVITY_LOG_RELATED_CI_HOSTED_ON).append(dnsName)
                         activityLog.append('\n')
-                    }
-                    else if (nodeRef != null) {
+                    } else if (nodeRef != null) {
                         // send 'is_registered_for' CI information using event node CI
                         builder."${CI_RELATIONSHIP}"(target_role: "${CONFIGURATION_ITEM_ROLE}") {
                             if (nodeRef.node.globalId)
@@ -2567,8 +2563,8 @@ public class ServiceManagerAdapter {
 
                     if (astl_assignment_group) {
                         activityLog.append(astl_assignment_group)
-                        activityLog.append('\n') }
-                    else {
+                        activityLog.append('\n')
+                    } else {
                         if (event.assignedGroup?.id < 0)
                             activityLog.append(ACTIVITY_LOG_UNASSIGNED)
                         else
@@ -2620,16 +2616,16 @@ public class ServiceManagerAdapter {
                         activityLog.append('\n')
                     }
                 } else {
-                    if(MapOPR2SMUrgency[event.severity] == "1"){
+                    if (MapOPR2SMUrgency[event.severity] == "1") {
                         astl_urgency = "2"
                     }
-                    if(MapOPR2SMUrgency[event.severity] == "2"){
+                    if (MapOPR2SMUrgency[event.severity] == "2") {
                         astl_urgency = "3"
                     }
-                    if(MapOPR2SMUrgency[event.severity] == "3"){
+                    if (MapOPR2SMUrgency[event.severity] == "3") {
                         astl_urgency = "4"
                     }
-                    if(MapOPR2SMUrgency[event.severity] == "4"){
+                    if (MapOPR2SMUrgency[event.severity] == "4") {
                         astl_urgency = "4"
                     }
 
@@ -2738,8 +2734,7 @@ public class ServiceManagerAdapter {
                                 activityLog.append('\n')
                                 activityLog.append(ACTIVITY_LOG_CA).append("\n${customAttribute.name}=${customAttribute.value}")
                                 activityLog.append('\n')
-                            }
-                            else {
+                            } else {
                                 // synchronize to the specified SM incident property
                                 builder."${smIncidentProperty}"(customAttribute.value)
                             }
@@ -2764,8 +2759,7 @@ public class ServiceManagerAdapter {
                             activityLog.append(ACTIVITY_LOG_CAUSE).append("\n").append(causeExternalRefId)
                             activityLog.append('\n')
                         }
-                    }
-                    else if (syncAllOPRPropertiesToSMActivityLog || SyncOPRPropertiesToSMActivityLog.contains("cause")) {
+                    } else if (syncAllOPRPropertiesToSMActivityLog || SyncOPRPropertiesToSMActivityLog.contains("cause")) {
                         // synchronize the OPR cause to the incident activity log
                         activityLog.append('\n')
                         final String causeTitle = event.cause.title
@@ -2805,8 +2799,7 @@ public class ServiceManagerAdapter {
                         if (previousCount == null) {
                             activityLog.append('\n')
                             activityLog.append(ACTIVITY_LOG_DUPLICATE_COUNT).append("\n").append(currentCount)
-                        }
-                        else {
+                        } else {
                             activityLog.append('\n')
                             activityLog.append(ACTIVITY_LOG_DUPLICATE_COUNT).append("\n")
                             activityLog.append("${ACTIVITY_LOG_PREVIOUS} ${previousCount} ${ACTIVITY_LOG_CURRENT} ${currentCount}")
@@ -2872,16 +2865,16 @@ public class ServiceManagerAdapter {
                         append(astl_operational_device).append('\n')
 
                 if (SpecifyImpactScope) {
-                    if(MapOPR2SMUrgency[event.severity] == "1"){
+                    if (MapOPR2SMUrgency[event.severity] == "1") {
                         builder."${IMPACT_SCOPE_TAG}"(label: "Site/Dept", 'site-dept')
                     }
-                    if(MapOPR2SMUrgency[event.severity] == "2"){
+                    if (MapOPR2SMUrgency[event.severity] == "2") {
                         builder."${IMPACT_SCOPE_TAG}"(label: "Multiple Users", 'multiple-users')
                     }
-                    if(MapOPR2SMUrgency[event.severity] == "3"){
+                    if (MapOPR2SMUrgency[event.severity] == "3") {
                         builder."${IMPACT_SCOPE_TAG}"(label: "User", 'user')
                     }
-                    if(MapOPR2SMUrgency[event.severity] == "4"){
+                    if (MapOPR2SMUrgency[event.severity] == "4") {
                         builder."${IMPACT_SCOPE_TAG}"(label: "User", 'user')
                     }
                 }
@@ -2978,8 +2971,7 @@ public class ServiceManagerAdapter {
                         if (dnsName)
                             activityLog.append('\n').append(ACTIVITY_LOG_RELATED_CI_HOSTED_ON).append(dnsName)
                         activityLog.append('\n')
-                    }
-                    else if (nodeRef != null) {
+                    } else if (nodeRef != null) {
                         // send 'is_registered_for' CI information using event node CI
                         builder."${CI_RELATIONSHIP}"(target_role: "${CONFIGURATION_ITEM_ROLE}") {
                             if (nodeRef.node.globalId)
@@ -3182,16 +3174,16 @@ public class ServiceManagerAdapter {
                 }
 
                 // check urgency/severity
-                if(MapOPR2SMUrgency[event.severity] == "1"){
+                if (MapOPR2SMUrgency[event.severity] == "1") {
                     astl_urgency = "2"
                 }
-                if(MapOPR2SMUrgency[event.severity] == "2"){
+                if (MapOPR2SMUrgency[event.severity] == "2") {
                     astl_urgency = "3"
                 }
-                if(MapOPR2SMUrgency[event.severity] == "3"){
+                if (MapOPR2SMUrgency[event.severity] == "3") {
                     astl_urgency = "4"
                 }
-                if(MapOPR2SMUrgency[event.severity] == "4"){
+                if (MapOPR2SMUrgency[event.severity] == "4") {
                     astl_urgency = "4"
                 }
 
@@ -3299,8 +3291,7 @@ public class ServiceManagerAdapter {
                                 activityLog.append('\n')
                                 activityLog.append(ACTIVITY_LOG_CA).append("\n${customAttribute.name}=${customAttribute.value}")
                                 activityLog.append('\n')
-                            }
-                            else {
+                            } else {
                                 // synchronize to the specified SM incident property
                                 builder."${smIncidentProperty}"(customAttribute.value)
                             }
@@ -3325,8 +3316,7 @@ public class ServiceManagerAdapter {
                             activityLog.append(ACTIVITY_LOG_CAUSE).append("\n").append(causeExternalRefId)
                             activityLog.append('\n')
                         }
-                    }
-                    else if (syncAllOPRPropertiesToSMActivityLog || SyncOPRPropertiesToSMActivityLog.contains("cause")) {
+                    } else if (syncAllOPRPropertiesToSMActivityLog || SyncOPRPropertiesToSMActivityLog.contains("cause")) {
                         // synchronize the OPR cause to the incident activity log
                         activityLog.append('\n')
                         final String causeTitle = event.cause.title
@@ -3366,8 +3356,7 @@ public class ServiceManagerAdapter {
                         if (previousCount == null) {
                             activityLog.append('\n')
                             activityLog.append(ACTIVITY_LOG_DUPLICATE_COUNT).append("\n").append(currentCount)
-                        }
-                        else {
+                        } else {
                             activityLog.append('\n')
                             activityLog.append(ACTIVITY_LOG_DUPLICATE_COUNT).append("\n")
                             activityLog.append("${ACTIVITY_LOG_PREVIOUS} ${previousCount} ${ACTIVITY_LOG_CURRENT} ${currentCount}")
@@ -3414,7 +3403,7 @@ public class ServiceManagerAdapter {
                 final URL eventUrl = event.drilldownUrl
                 activityLog.append('\n')
                 activityLog.append(ACTIVITY_LOG_AFFECTS_SERVICES)
-                for (def service: event.affectsBusinessServices) {
+                for (def service : event.affectsBusinessServices) {
                     appendBusinessServiceToActivityLog(activityLog, service, eventUrl, '\t')
                 }
                 activityLog.append('\n')
@@ -3538,8 +3527,7 @@ public class ServiceManagerAdapter {
                     activityLog.append(" : ${ciUrl}")
                 }
                 activityLog.append('\n')
-            }
-            else
+            } else
                 m_log.debug("No top critical business service located.")
         }
 
@@ -3581,16 +3569,13 @@ public class ServiceManagerAdapter {
         if (propValue instanceof String) {
             String value = ((String) propValue).trim()
             return (value) ? value : null
-        }
-        else if (propValue instanceof byte[]) {
+        } else if (propValue instanceof byte[]) {
             TopologyUpdateFactory topologyUpdateFactory = ucmdbService?.topologyUpdateService?.factory
             return (topologyUpdateFactory == null) ?
                 null : topologyUpdateFactory.restoreCIIdFromBytes((byte[]) propValue).asString
-        }
-        else if (propValue instanceof UcmdbId) {
+        } else if (propValue instanceof UcmdbId) {
             return ((UcmdbId) propValue).asString
-        }
-        else {
+        } else {
             m_log.error("Unexpected object type for UCMDB ID: " + propValue?.class?.canonicalName)
             return null
         }
@@ -3612,7 +3597,7 @@ public class ServiceManagerAdapter {
 
         List services = affectsService.configurationItem?.affectsBusinessServices
         if (services != null && !services.isEmpty()) {
-            for (def nextService: services) {
+            for (def nextService : services) {
                 appendBusinessServiceToActivityLog(activityLog, nextService, eventUrl, indent + '\t')
             }
         }
@@ -3625,7 +3610,7 @@ public class ServiceManagerAdapter {
 
         if (headers != null && !headers.isEmpty()) {
             final Map<String, Cookie> cookieMap = new HashMap<String, Cookie>()
-            for (final Cookie c: cookies)
+            for (final Cookie c : cookies)
                 cookieMap.put(c.name, c)
             headers.each() { Map.Entry<String, List<String>> header ->
                 if (header.key != null)
@@ -3711,7 +3696,7 @@ public class ServiceManagerAdapter {
 
         // Set any cookies saved from last request
         if (cookies != null && !cookies.isEmpty()) {
-            for (Cookie cookie: cookies)
+            for (Cookie cookie : cookies)
                 resource.cookie(cookie)
         }
         return resource
