@@ -467,6 +467,9 @@ public class ServiceManagerAdapter {
     //////////////Custom boolean section
     //TODO  fix astl_operational_device
     private boolean astl_operational_device = false
+    //TODO  fix astl_operational_device
+    //SCHEREPE TEST
+    //SCHEREPE TEST
 
     // Maintain Cookies
     private Set<Cookie> m_smCookies = new HashSet<Cookie>()
