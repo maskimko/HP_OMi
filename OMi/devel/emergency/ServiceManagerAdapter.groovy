@@ -197,8 +197,13 @@ public class ServiceManagerAdapter {
     // If synchronization on change is desired for an OPR event property, add the property to the list. It will
     // then be synchronized to a corresponding SM property whenever the event property is changed in OMi.
     //
+
+    /*
+    deleted tag astl_operational_device
+     */
+
     private static final Set SyncOPRPropertiesToSMActivityLog = ["title", "description", "state", "severity", "priority",
-            "annotation", "duplicate_count", "cause", "symptom", "assigned_user", "assigned_group", "astl_operational_device", "custom_attribute"]
+            "annotation", "duplicate_count", "cause", "symptom", "assigned_user", "assigned_group",  "custom_attribute"]
 
     // SM Incident properties to synchronize to a corresponding OPR Event property on change:
     //
@@ -251,13 +256,13 @@ public class ServiceManagerAdapter {
     //
     // NOTE: Only top-level SM incident properties are supported in this map.
     // EXAMPLE: ["MyCustomCA" : "activity_log", "MyCustomCA_1" : "SMCustomAttribute" ]
-    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice", "OperationalDevice": "operational_device", "some_test_attribute": "SomeTestAttribute",  "SMTestKey" : "TestKey"]
+    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice", "event_addon": "EventAddon" ]
 
     // Map the specified SM incident properties to an OPR event custom attribute for synchronization.
     // Add an SM incident property name to the map along with OPR event custom attribute name.
     //
     // EXAMPLE: ["incident_status" : "SMIncidentStatus"]
-    private static final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device", "operational_device": "OperationalDevice", "some_test_attribute": "SomeTestAttribute", "SMTestKey" : "TestKey"]
+    private static final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device", "EventAddon": "event_addon"]
 
     // **********************************************************************
     // * END Configuration: Customization of properties for synchronization *
@@ -464,12 +469,10 @@ public class ServiceManagerAdapter {
     private String m_home = ''
     private Integer m_oprVersion = 0
 
-    //////////////Custom boolean section
+
     //TODO  fix astl_operational_device
     private boolean astl_operational_device = false
-    //TODO  fix astl_operational_device
-    //SCHEREPE TEST
-    //SCHEREPE TEST
+
 
     // Maintain Cookies
     private Set<Cookie> m_smCookies = new HashSet<Cookie>()
@@ -481,8 +484,9 @@ public class ServiceManagerAdapter {
     // custom properties
     private Properties m_properties = new Properties()
 
+    //TODO add attributes what tot synchronize with SM
     // OPR CA synchronize to SM map
-    private final Map<String, String> m_OPR2SMCustomAttribute = [:]
+    private final Map<String, String> m_OPR2SMCustomAttribute = ["operational_device": "SMCustomAttribute", "operational_device":"activity_log", "event_addon":"activity_log", "event_addon" : "SMCustomAttribute"]
 
     // Sync 'all' boolean flags
     private final boolean syncAllOPRPropertiesToSM = SyncAllProperties || SyncOPRPropertiesToSM.contains("*")
@@ -504,7 +508,7 @@ public class ServiceManagerAdapter {
 
 
 
-    private synchronized void addCustomAttribute(OprEvent event, Map<String, String> customAttributes) {
+    private synchronized OprEvent addCustomAttribute(OprEvent event, Map<String, String> customAttributes) {
 
         String attributeName = null;
         String attributeValue = null;
@@ -566,6 +570,9 @@ public class ServiceManagerAdapter {
 
         } catch (NullPointerException npe) {
             npe.printStackTrace();
+        }
+        finally {
+            return event
         }
 
     }
@@ -2744,7 +2751,10 @@ public class ServiceManagerAdapter {
                 if (m_log.isDebugEnabled()) {
                       m_log.debug("Beginning of adding custom attributes ");
                        m_log.debug("Add OperationalDevice attribute") ;
-                    addCustomAttribute(event, new HashMap<String, String>().put("OperationalDevice", "Yes my capitan!"));
+                    Map<String,String> tempMap = new HashMap<String, String>();
+                    tempMap.put("operational_device", astl_operational_device );
+                    tempMap.put("event_addon", "Digital value 007! Yes my capitan!");
+                    event = addCustomAttribute(event, tempMap);
 
                 }
                 if (!m_OPR2SMCustomAttribute.isEmpty() && (event.customAttributes != null)) {
@@ -3303,6 +3313,17 @@ public class ServiceManagerAdapter {
                     }
                 }
 
+
+
+                if (m_log.isDebugEnabled()) {
+                    m_log.debug("Beginning of adding default attributes ");
+                    m_log.debug("Add OperationalDevice attribute") ;
+                    Map<String,String> tempMap = new HashMap<String, String>();
+                    tempMap.put("OperationalDevice", "Yes my capitan!");
+                    tempMap.put("some_test_attribute", "Digital value");
+                    event = addCustomAttribute(event, tempMap);
+
+                }
                 // check if there are any custom attributes to add to the activity log
                 if (!m_OPR2SMCustomAttribute.isEmpty() && (event.customAttributes != null)) {
                     event.customAttributes.customAttributes?.each() { OprCustomAttribute customAttribute ->
