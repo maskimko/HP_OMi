@@ -188,7 +188,7 @@ public class ServiceManagerAdapter {
     // If synchronization on change is desired for an OPR event property, add the property to the list. It will
     // then be synchronized to a corresponding SM property whenever the event property is changed in OMi.
     //
-    private static final Set SyncOPRPropertiesToSM = ["state", "solution", "cause", "custom_attribute", ASTL_OPERATIONAL_DEVICE_TAG]
+    private static final Set SyncOPRPropertiesToSM = ["state", "solution", "cause", "custom_attribute", "operational_device"]
 
     // OPR event properties to synchronize to a corresponding SM Incident "activity log" on change:
     //
@@ -204,7 +204,7 @@ public class ServiceManagerAdapter {
      */
 
     private static final Set SyncOPRPropertiesToSMActivityLog = ["title", "description", "state", "severity", "priority",
-            "annotation", "duplicate_count", "cause", "symptom", "assigned_user", "assigned_group", "custom_attribute", ASTL_OPERATIONAL_DEVICE_TAG]
+            "annotation", "duplicate_count", "cause", "symptom", "assigned_user", "assigned_group", "operational_device"]
 
     // SM Incident properties to synchronize to a corresponding OPR Event property on change:
     //
@@ -213,7 +213,7 @@ public class ServiceManagerAdapter {
     // If synchronization on change is desired for an SM incident property, add the property to the list. It will
     // then be synchronized to a corresponding OPR event property whenever the incident property is changed in SM.
     //
-    private static final Set SyncSMPropertiesToOPR = ["incident_status", "solution", "custom_attribute", ASTL_OPERATIONAL_DEVICE_TAG]
+    private static final Set SyncSMPropertiesToOPR = ["incident_status", "solution", "operational_device"]
 
     // OPR event states to synchronize to the SM incident status on change.
     //
@@ -258,13 +258,13 @@ public class ServiceManagerAdapter {
     // NOTE: Only top-level SM incident properties are supported in this map.
     // EXAMPLE: ["MyCustomCA" : "activity_log", "MyCustomCA_1" : "SMCustomAttribute" ]
     //private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "operational_device": ACTIVITY_LOG_TAG, "event_addon": "EventAddon", "event_addon": ACTIVITY_LOG_TAG ]
-    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "event_addon": ACTIVITY_LOG_TAG]
+    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice", "event_addon": "EventAddon"]
 
     // Map the specified SM incident properties to an OPR event custom attribute for synchronization.
     // Add an SM incident property name to the map along with OPR event custom attribute name.
     //
     // EXAMPLE: ["incident_status" : "SMIncidentStatus"]
-    private static final Map<String, String> MapSM2OPRCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "event_addon": "EventAddon"]
+    private static final Map<String, String> MapSM2OPRCustomAttribute = [ "OperationalDevice" : "operational_device","EventAddon": "event_addon" ]
     // **********************************************************************
     // * END Configuration: Customization of properties for synchronization *
     // **********************************************************************
@@ -1045,15 +1045,21 @@ public class ServiceManagerAdapter {
 
     void updateCustomAttributes(String eventId, GPathResult respIncident, def args) {
         if ((m_oprVersion > 920) && !MapSM2OPRCustomAttribute.empty) {
+
+
+
             final OprEvent update = new OprEvent()
             update.id = eventId
             update.customAttributes = new OprCustomAttributeList()
             MapSM2OPRCustomAttribute.each() {
                 String smPropertyName, String caName ->
+                    if (m_log.isDebugEnabled()){
+                          m_log.debug(respIncident.getProperty(smPropertyName))
+                    }
                     String caValue = respIncident.getProperty(smPropertyName)?.text()
                     update.customAttributes.customAttributes.add(new OprCustomAttribute(caName, caValue))
                     /*
-                    Add a custom dubugger
+                    Add a custom debuger
                     to watch incident update
                      */
                     if (m_log.isDebugEnabled()) {
@@ -1823,7 +1829,7 @@ public class ServiceManagerAdapter {
                 if (event.title =~ /SEA Version:System Event Analyzer for Windows/)
                     astl_operational_device = "true"
 
-                //# Configuring Auto Incidents from Serviceguad cluster (C20026)
+                //# Configuring Auto Incidents from Serviceguard cluster (C20026)
                 if (event.title =~ /hpmcSG/)
                     astl_logical_name = astl_ci_os_name
 
