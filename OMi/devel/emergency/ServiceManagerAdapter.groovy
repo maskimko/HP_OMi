@@ -293,9 +293,9 @@ public class ServiceManagerAdapter {
     // An empty string is NOT allowed.
     private static final String EMPTY_DESCRIPTION_OVERRIDE = "<none>"
 
-    //TODO  fix astl_operational_device
+
     private String astl_operational_device = "false"
-    private static final String ASTL_OPERATIONAL_DEVICE_TAG = "OperationalDevice"
+
 
     // SM Incident Activity Log text.
     // This text is prefixed to the appropriate OPR event property when synchronizing it to an SM Incident activity log.
