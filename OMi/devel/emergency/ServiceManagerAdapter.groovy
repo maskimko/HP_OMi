@@ -188,7 +188,7 @@ public class ServiceManagerAdapter {
     // If synchronization on change is desired for an OPR event property, add the property to the list. It will
     // then be synchronized to a corresponding SM property whenever the event property is changed in OMi.
     //
-    private static final Set SyncOPRPropertiesToSM = ["state", "solution", "cause", "custom_attribute"]
+    private static final Set SyncOPRPropertiesToSM = ["state", "solution", "cause", "custom_attribute", ASTL_OPERATIONAL_DEVICE_TAG]
 
     // OPR event properties to synchronize to a corresponding SM Incident "activity log" on change:
     //
@@ -204,7 +204,7 @@ public class ServiceManagerAdapter {
      */
 
     private static final Set SyncOPRPropertiesToSMActivityLog = ["title", "description", "state", "severity", "priority",
-            "annotation", "duplicate_count", "cause", "symptom", "assigned_user", "assigned_group",  "custom_attribute"]
+            "annotation", "duplicate_count", "cause", "symptom", "assigned_user", "assigned_group", "custom_attribute", ASTL_OPERATIONAL_DEVICE_TAG]
 
     // SM Incident properties to synchronize to a corresponding OPR Event property on change:
     //
@@ -213,7 +213,7 @@ public class ServiceManagerAdapter {
     // If synchronization on change is desired for an SM incident property, add the property to the list. It will
     // then be synchronized to a corresponding OPR event property whenever the incident property is changed in SM.
     //
-    private static final Set SyncSMPropertiesToOPR = ["incident_status", "solution", "custom_attribute"]
+    private static final Set SyncSMPropertiesToOPR = ["incident_status", "solution", "custom_attribute", ASTL_OPERATIONAL_DEVICE_TAG]
 
     // OPR event states to synchronize to the SM incident status on change.
     //
@@ -258,13 +258,13 @@ public class ServiceManagerAdapter {
     // NOTE: Only top-level SM incident properties are supported in this map.
     // EXAMPLE: ["MyCustomCA" : "activity_log", "MyCustomCA_1" : "SMCustomAttribute" ]
     //private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "operational_device": ACTIVITY_LOG_TAG, "event_addon": "EventAddon", "event_addon": ACTIVITY_LOG_TAG ]
-    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "event_addon": ACTIVITY_LOG_TAG ]
+    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "event_addon": ACTIVITY_LOG_TAG]
 
     // Map the specified SM incident properties to an OPR event custom attribute for synchronization.
     // Add an SM incident property name to the map along with OPR event custom attribute name.
     //
     // EXAMPLE: ["incident_status" : "SMIncidentStatus"]
-    private static final Map<String, String> MapSM2OPRCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "event_addon": "EventAddon" ]
+    private static final Map<String, String> MapSM2OPRCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "event_addon": "EventAddon"]
     // **********************************************************************
     // * END Configuration: Customization of properties for synchronization *
     // **********************************************************************
@@ -293,11 +293,9 @@ public class ServiceManagerAdapter {
     // An empty string is NOT allowed.
     private static final String EMPTY_DESCRIPTION_OVERRIDE = "<none>"
 
-
     //TODO  fix astl_operational_device
     private boolean astl_operational_device = false
     private static final String ASTL_OPERATIONAL_DEVICE_TAG = "OperationalDevice"
-
 
     // SM Incident Activity Log text.
     // This text is prefixed to the appropriate OPR event property when synchronizing it to an SM Incident activity log.
@@ -476,8 +474,6 @@ public class ServiceManagerAdapter {
     private String m_home = ''
     private Integer m_oprVersion = 0
 
-
-
     // Maintain Cookies
     private Set<Cookie> m_smCookies = new HashSet<Cookie>()
 
@@ -487,7 +483,6 @@ public class ServiceManagerAdapter {
 
     // custom properties
     private Properties m_properties = new Properties()
-
 
     // OPR CA synchronize to SM map
     private final Map<String, String> m_OPR2SMCustomAttribute = [:]
@@ -507,36 +502,45 @@ public class ServiceManagerAdapter {
                     (syncAllSMStatusToOPR || SyncSMStatusToOPR.contains("closed"))))
 
     // Important to use "def" here, otherwise a cast exception will be thrown and the m_log is set to <null>
-   private  def m_log
+    private def m_log
 
 
 
 
-    private void debugForwardEvent(ForwardChangeArgs fca, org.apache.commons.logging.Log eventDebugLog){
-                        eventDebugLog.debug("Diving into debugEventMethod");
-            OprEventChange  debugChanges = fca.getChanges();
-       /*
-        OprConfigurationItem debugCI = fca.getCI
-        Don't now how to get it, yet
-         */
-            OprEvent  debugEvent = fca.getEvent();
+    private void debugForwardEvent(ForwardChangeArgs fca, org.apache.commons.logging.Log eventDebugLog) {
+        eventDebugLog.debug("Diving into debugEventMethod");
+        OprEventChange debugChanges = fca.getChanges();
+        /*
+         OprConfigurationItem debugCI = fca.getCI
+         Don't now how to get it, yet
+          */
+        OprEvent debugEvent = fca.getEvent();
         eventDebugLog.debug("External reference id is " + fca.getExternalRefId());
         OprForwardingInfo debugInfo = fca.getInfo();
 
-        //TODO check OrpEventChange
-        //TODO check OprEvent custom attributes
-        //TODO check OprForwardingInfo
+        //TODO extend OrpEventChange
 
-         eventDebugLog.debug("Event was modified by " + debugChanges.getModifiedBy());
+
+        eventDebugLog.debug("Event was modified by " + debugChanges.getModifiedBy());
         Map<QName, Object> changeAttributes = debugChanges.getAnyAttribute();
         Iterator<Map.Entry<QName, Object>> changeAttributesIterator = changeAttributes.iterator();
         while (changeAttributesIterator.hasNext()) {
             Map.Entry<QName, Object> debugAttrEntry = changeAttributesIterator.next();
             eventDebugLog.debug("Attribute QName: " + debugAttrEntry.getKey().toString() + " and value: " + debugAttrEntry.getValue().toString());
         }
+        eventDebugLog.debug("Head line: "+ debugChanges.getHeadline());
+        eventDebugLog.debug("Creation time: "+ debugChanges.getTimeCreated());
+        Set<OprEventPropertyChange> changeProperties = debugChanges.getChangedProperties();
+        Iterator<OprEventPropertyChange> changePropertiesIterator = changeProperties.iterator();
+        while(changePropertiesIterator.hasNext()) {
+            OprEventPropertyChange debugPropChange = changePropertiesIterator.next();
+            eventDebugLog.debug("Property change name: " + debugPropChange.getPropertyName());
+            eventDebugLog.debug("Property change current value: " + debugPropChange.getCurrentValue());
+            eventDebugLog.debug("Property change previous value: " + debugPropChange.getPreviousValue());
+        }
         eventDebugLog.debug("Getting custom attributes from event");
-        ArrayList<OprCustomAttribute> debugEventCustomAttributeList =  debugEvent.getCustomAttributes().getCustomAttributes();
-        for (OprCustomAttribute debugCustAttrItem: debugEventCustomAttributeList){
+        ArrayList<OprCustomAttribute> debugEventCustomAttributeList = debugEvent.getCustomAttributes().getCustomAttributes();
+        for (OprCustomAttribute debugCustAttrItem : debugEventCustomAttributeList) {
             eventDebugLog.debug("Contains attribute name: " + debugCustAttrItem.getName() + " and value: " + debugCustAttrItem.getValue());
         }
 
@@ -610,9 +614,9 @@ public class ServiceManagerAdapter {
                     OprCustomAttribute currentAttribute = checkingIterator.next();
                     m_log.debug("Custom attribute " + currentAttribute.getName() + " with value " + currentAttribute.getValue());
                 }
-                m_log.debug("Debug of iterator")    ;
-                m_log.debug(checkingIterator)      ;
-                m_log.debug("Post adding custom attribute checking section End")   ;
+                m_log.debug("Debug of iterator");
+                m_log.debug(checkingIterator);
+                m_log.debug("Post adding custom attribute checking section End");
 
             }
 
@@ -657,16 +661,14 @@ public class ServiceManagerAdapter {
             final String value = entry.value
             m_OPR2SMCustomAttribute.put(name, value)
 
-
             /*
             Adding our second generation custom attributes
              */
-           /*
-            HashMap<String, String> testMap = new HashMap<String, String>();
-            testMap.put("TestKey", "TestValue");
-            addCustomAttribute(event, testMap);
-             */
-
+            /*
+             HashMap<String, String> testMap = new HashMap<String, String>();
+             testMap.put("TestKey", "TestValue");
+             addCustomAttribute(event, testMap);
+              */
 
 
         }
@@ -1054,9 +1056,9 @@ public class ServiceManagerAdapter {
                     Add a custom dubugger
                     to watch incident update
                      */
-                    if (m_log.isDebugEnabled()){
-                        m_log.debug("Processing updateCustomAttributes method")   ;
-                        m_log.debug("Adding " + caName + " with value " + caValue) ;
+                    if (m_log.isDebugEnabled()) {
+                        m_log.debug("Processing updateCustomAttributes method");
+                        m_log.debug("Adding " + caName + " with value " + caValue);
                     }
             }
             // Add the CAs to the event
@@ -1082,11 +1084,10 @@ public class ServiceManagerAdapter {
         /*
         Debug injection
          */
-         debugForwardEvent(args, m_log);
+        debugForwardEvent(args, m_log);
 
         return sendChange(args, args.changes, args.externalRefId, args.credentials)
     }
-
 
     //TODO debug this method
 
@@ -1104,7 +1105,7 @@ public class ServiceManagerAdapter {
         m_log.debug("***End Bulk Forward Change***")
         return result
     }
-
+    //TODO debug this method
     private Boolean sendChange(def args, OprEventChange changes, String externalRefId, PasswordAuthentication credentials) {
         Boolean anyAttributeWasChanged = false
         if (m_log.isDebugEnabled())
@@ -1253,6 +1254,7 @@ public class ServiceManagerAdapter {
                         break
                 }
             }
+
 
             // handle CAs separately
             if (OprEventPropertyNameEnum.custom_attribute.equals(name)) {
@@ -2285,11 +2287,9 @@ public class ServiceManagerAdapter {
             //############################ END Rule 35 ######################################
         }
 //##################################### END ASTELIT RULES SECTION ##################################
-           //TODO Custom section
+        //TODO Custom section
 //##################################### ASTELIT CUSTOM SECTION #####################################
         if (!default_flag) {
-
-
 
             //FIXME Truncater to cope from delev package
             // get the title & description.
@@ -2333,7 +2333,7 @@ public class ServiceManagerAdapter {
                 builder.incident_type(INCIDENT_TYPE)
                 if (SpecifyActiveProcess)
                     builder.active_process("true")
-                  //TODO Move this to custom attribute
+                //TODO Move this to custom attribute
                 builder."${OPERATIONAL_DEVICE_TAG}"(astl_operational_device)
 
                 activityLog.append('\n').append(ACTIVITY_LOG_OPERATIONAL_DATA).append('\n').
@@ -2808,13 +2808,13 @@ public class ServiceManagerAdapter {
 
                 // check if there are any custom attributes to add to the activity log
 
-                 //TODO Add debug to custom section
+                //TODO Add debug to custom section
 
                 if (m_log.isDebugEnabled()) {
-                      m_log.debug("Beginning of adding custom attributes ");
-                       m_log.debug("Add OperationalDevice attribute") ;
-                    Map<String,String> tempMap = new HashMap<String, String>();
-                    tempMap.put("operational_device", astl_operational_device );
+                    m_log.debug("Beginning of adding custom attributes ");
+                    m_log.debug("Add OperationalDevice attribute");
+                    Map<String, String> tempMap = new HashMap<String, String>();
+                    tempMap.put("operational_device", astl_operational_device);
                     tempMap.put("event_addon", "Digital value 007! Yes my capitan!");
                     addCustomAttribute(event, tempMap);
 
@@ -2918,7 +2918,7 @@ public class ServiceManagerAdapter {
 
         }
 //##################################### END ASTELIT CUSTOM SECTION #####################################
-   //TODO Default section
+        //TODO Default section
 //##################################### DEFAULT SECTION #####################################
         if (default_flag) {
 
@@ -3380,8 +3380,8 @@ public class ServiceManagerAdapter {
 
                 if (m_log.isDebugEnabled()) {
                     m_log.debug("Beginning of adding default attributes ");
-                    m_log.debug("Add OperationalDevice attribute") ;
-                    Map<String,String> tempMap = new HashMap<String, String>();
+                    m_log.debug("Add OperationalDevice attribute");
+                    Map<String, String> tempMap = new HashMap<String, String>();
                     tempMap.put("OperationalDevice", "Yes my capitan!");
                     tempMap.put("some_test_attribute", "Digital value");
                     addCustomAttribute(event, tempMap);
