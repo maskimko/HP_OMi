@@ -73,6 +73,7 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.Iterator
 import java.util.Map.Entry
+import javax.xml.namespace.QName;
 
 public class ServiceManagerAdapter {
 
@@ -256,7 +257,8 @@ public class ServiceManagerAdapter {
     //
     // NOTE: Only top-level SM incident properties are supported in this map.
     // EXAMPLE: ["MyCustomCA" : "activity_log", "MyCustomCA_1" : "SMCustomAttribute" ]
-    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "operational_device": ACTIVITY_LOG_TAG, "event_addon": "EventAddon", "event_addon": ACTIVITY_LOG_TAG ]
+    //private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "operational_device": ACTIVITY_LOG_TAG, "event_addon": "EventAddon", "event_addon": ACTIVITY_LOG_TAG ]
+    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "event_addon": ACTIVITY_LOG_TAG ]
 
     // Map the specified SM incident properties to an OPR event custom attribute for synchronization.
     // Add an SM incident property name to the map along with OPR event custom attribute name.
@@ -508,6 +510,51 @@ public class ServiceManagerAdapter {
    private  def m_log
 
 
+
+
+    private void debugForwardEvent(ForwardChangeArgs fca, org.apache.commons.logging.Log eventDebugLog){
+                        eventDebugLog.debug("Diving into debugEventMethod");
+            OprEventChange  debugChanges = fca.getChanges();
+       /*
+        OprConfigurationItem debugCI = fca.getCI
+        Don't now how to get it, yet
+         */
+            OprEvent  debugEvent = fca.getEvent();
+        eventDebugLog.debug("External reference id is " + fca.getExternalRefId());
+        OprForwardingInfo debugInfo = fca.getInfo();
+
+        //TODO check OrpEventChange
+        //TODO check OprEvent custom attributes
+        //TODO check OprForwardingInfo
+
+         eventDebugLog.debug("Event was modified by " + debugChanges.getModifiedBy());
+        Map<QName, Object> changeAttributes = debugChanges.getAnyAttribute();
+        Iterator<Map.Entry<QName, Object>> changeAttributesIterator = changeAttributes.iterator();
+        while (changeAttributesIterator.hasNext()) {
+            Map.Entry<QName, Object> debugAttrEntry = changeAttributesIterator.next();
+            eventDebugLog.debug("Attribute QName: " + debugAttrEntry.getKey().toString() + " and value: " + debugAttrEntry.getValue().toString());
+        }
+        eventDebugLog.debug("Getting custom attributes from event");
+        ArrayList<OprCustomAttribute> debugEventCustomAttributeList =  debugEvent.getCustomAttributes().getCustomAttributes();
+        for (OprCustomAttribute debugCustAttrItem: debugEventCustomAttributeList){
+            eventDebugLog.debug("Contains attribute name: " + debugCustAttrItem.getName() + " and value: " + debugCustAttrItem.getValue());
+        }
+
+        eventDebugLog.debug("Starting Debug of OprForwardingInfo");
+
+        eventDebugLog.debug("OprForwardingInfo ServerId: " + debugInfo.getConnectedServerId());
+        eventDebugLog.debug("OprForwardingInfo DisplayLabel: " + debugInfo.getDisplayLabel());
+        eventDebugLog.debug("OprForwardingInfo ExternalId: " + debugInfo.getExternalId());
+        eventDebugLog.debug("OprForwardingInfo ExternalUrl: " + debugInfo.getExternalUrl());
+        eventDebugLog.debug("OprForwardingInfo Forwarding Type: " + debugInfo.getForwardingType());
+        eventDebugLog.debug("OprForwardingInfo Name: " + debugInfo.getName());
+        eventDebugLog.debug("OprForwardingInfo Queue Identifier: " + debugInfo.getQueueIdentifier());
+        eventDebugLog.debug("OprForwardingInfo Rule name: " + debugInfo.getRuleName());
+        eventDebugLog.debug("OprForwardingInfo State: " + debugInfo.getState());
+        eventDebugLog.debug("OprForwardingInfo Time Last Changed: " + debugInfo.getTimeLastChangeSent());
+
+
+    }
 
 
     private synchronized void addCustomAttribute(OprEvent event, Map<String, String> customAttributes) {
@@ -1003,6 +1050,14 @@ public class ServiceManagerAdapter {
                 String smPropertyName, String caName ->
                     String caValue = respIncident.getProperty(smPropertyName)?.text()
                     update.customAttributes.customAttributes.add(new OprCustomAttribute(caName, caValue))
+                    /*
+                    Add a custom dubugger
+                    to watch incident update
+                     */
+                    if (m_log.isDebugEnabled()){
+                        m_log.debug("Processing updateCustomAttributes method")   ;
+                        m_log.debug("Adding " + caName + " with value " + caValue) ;
+                    }
             }
             // Add the CAs to the event
             try {
@@ -1024,8 +1079,16 @@ public class ServiceManagerAdapter {
      *         If false is returned or an exception is thrown, a retry will be made later.
      */
     public Boolean forwardChange(ForwardChangeArgs args) {
+        /*
+        Debug injection
+         */
+         debugForwardEvent(args, m_log);
+
         return sendChange(args, args.changes, args.externalRefId, args.credentials)
     }
+
+
+    //TODO debug this method
 
     // args if of type BulkForwardChangeArgs. Using "def" for backwards compatibility with 9.1x
     public Boolean forwardChanges(def args) {
