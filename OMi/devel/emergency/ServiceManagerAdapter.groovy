@@ -294,7 +294,7 @@ public class ServiceManagerAdapter {
     private static final String EMPTY_DESCRIPTION_OVERRIDE = "<none>"
 
     //TODO  fix astl_operational_device
-    private boolean astl_operational_device = false
+    private String astl_operational_device = "false"
     private static final String ASTL_OPERATIONAL_DEVICE_TAG = "OperationalDevice"
 
     // SM Incident Activity Log text.
@@ -1675,7 +1675,7 @@ public class ServiceManagerAdapter {
             if (event.category == "billing_admin_team" && (MapOPR2SMUrgency[event.severity] == "1" || MapOPR2SMUrgency[event.severity] == "2")) {
 
                 astl_logical_name = event.application
-                astl_operational_device = true
+                astl_operational_device = "true"
 
                 if (MapOPR2SMUrgency[event.severity] == "1") {
                     astl_priority = "2"
@@ -1694,7 +1694,7 @@ public class ServiceManagerAdapter {
             if (event.category == "SAP" && event.application == "SAP" && event.object == "R3AbapShortdumps") {
 
                 astl_logical_name = "sapUKP"
-                astl_operational_device = true
+                astl_operational_device = "true"
                 astl_priority = "4"
 
                 default_flag = false
@@ -1708,7 +1708,7 @@ public class ServiceManagerAdapter {
                 astl_logical_name = " "
                 astl_assignment_group = "SN-AO-CSP-SSR"
                 astl_title = "THS-NRTRDE file transfer delay"
-                astl_operational_device = true
+                astl_operational_device = "true"
                 astl_priority = "4"
 
                 default_flag = false
@@ -1739,7 +1739,7 @@ public class ServiceManagerAdapter {
                 astl_description = "SL3K Drive not unloaded for fetch - on rewindUnload"
                 astl_category = "Infrastructure"
                 astl_sub_category = "Backups - Hardware"
-                astl_operational_device = true
+                astl_operational_device = "true"
                 astl_priority = "4"
 
                 default_flag = false
@@ -1772,7 +1772,7 @@ public class ServiceManagerAdapter {
             //##################### Performance Events ##############################
             if (event.category == "Performance" || event.object == "Connection_check") {
                 astl_logical_name = astl_ci_os_name
-                astl_operational_device = true
+                astl_operational_device = "true"
 
                 default_flag = false
             }
@@ -1794,7 +1794,7 @@ public class ServiceManagerAdapter {
                 }
 
                 astl_logical_name = event.object
-                astl_operational_device = true
+                astl_operational_device = "true"
 
                 default_flag = false
             }
@@ -1805,7 +1805,7 @@ public class ServiceManagerAdapter {
             if (event.category == "Hardware" && event.application == "SANdisk" && (MapOPR2SMUrgency[event.severity] == "2")) {
 
                 astl_assignment_group = "SN-IO-SSDA-SA"
-                astl_operational_device = true
+                astl_operational_device = "true"
                 astl_priority = "1"
 
                 default_flag = false
@@ -1821,7 +1821,7 @@ public class ServiceManagerAdapter {
 
                 //# HP SIM events with opened CASE in the HP (C20191)
                 if (event.title =~ /SEA Version:System Event Analyzer for Windows/)
-                    astl_operational_device = true
+                    astl_operational_device = "true"
 
                 //# Configuring Auto Incidents from Serviceguad cluster (C20026)
                 if (event.title =~ /hpmcSG/)
@@ -1829,7 +1829,7 @@ public class ServiceManagerAdapter {
 
                 myMatcher = (event.title =~ /(NO_SERVER_CI_OUTAGE_FLAG)(.*)/)
                 if (myMatcher.matches()) {
-                    astl_operational_device = true
+                    astl_operational_device = "true"
                     astl_description = myMatcher[0][2]
                 }
 
@@ -1837,7 +1837,7 @@ public class ServiceManagerAdapter {
                     astl_priority = "4"
 
                 if (event.title =~ /(\(SNMP\) Process Monitor Event Trap \(11011\)|HP ProLiant-HP Power-Power Supply Failed|cpqHe4FltTolPowerSupplyDegraded|cpqHe4FltTolPowerSupplyFailed|\(WBEM\) Power redundancy reduced|\(WBEM\) Power redundancy lost|\(WBEM\) Power Supply Failed|\(SNMP\)  Power Supply Failed \(6050\)|\(SNMP\)  Power Redundancy Lost \(6032\))/)
-                    astl_operational_device = true
+                    astl_operational_device = "true"
 
                 //# For WMI Events. If string Brief Description is in Message text
                 myMatcher = (event.title =~ /Brief Description:\n\s(.*)/)
@@ -1863,7 +1863,7 @@ public class ServiceManagerAdapter {
                     astl_assignment_group = "SN-IO-SSDA-SB"
                     astl_category = "Infrastructure"
                     astl_sub_category = "SAN Switch"
-                    astl_operational_device = true
+                    astl_operational_device = "true"
 
                     myMatcher = (event.title =~ /.*(.*AN-.*Slot.*, port.*is a congestion bottleneck)/)
                     if (myMatcher.matches()) {
@@ -1892,7 +1892,7 @@ public class ServiceManagerAdapter {
                 astl_category = "Infrastructure"
                 astl_sub_category = "Storage"
                 astl_priority = "3"
-                astl_operational_device = true
+                astl_operational_device = "true"
 
                 myMatcher = (event.title =~ /.*SOURCE.*"(.*XP.*)".*STATUS.*COMPONENT.*"(.*)".*DESCRIPTION.*".*error.*"/)
                 if (myMatcher.matches()) {
@@ -2022,7 +2022,7 @@ public class ServiceManagerAdapter {
             //######################## NTP Events ###################################
             if (event.category == "Time" && event.application == "NTP" && event.object == "Time") {
                 astl_logical_name = astl_ci_os_name
-                astl_operational_device = true
+                astl_operational_device = "true"
                 default_flag = false
             }
             //############################ END Rule 22 ######################################
@@ -2084,7 +2084,7 @@ public class ServiceManagerAdapter {
                 astl_assignment_group = "SN-IO-SSDA-SB"
                 astl_category = "Infrastructure"
                 astl_sub_category = "Backups - Software"
-                astl_operational_device = true
+                astl_operational_device = "true"
                 astl_priority = "4"
 
                 default_flag = false
@@ -2097,7 +2097,7 @@ public class ServiceManagerAdapter {
                 astl_assignment_group = "SN-IO-SSDA-SB"
                 astl_category = "Infrastructure"
                 astl_sub_category = "Backups - Software"
-                astl_operational_device = true
+                astl_operational_device = "true"
                 astl_priority = "3"
 
                 default_flag = false
@@ -2132,7 +2132,7 @@ public class ServiceManagerAdapter {
                 astl_category = "Security"
                 astl_sub_category = "Security Systems Availability"
 
-                astl_operational_device = true
+                astl_operational_device = "true"
 
                 default_flag = false
             }
@@ -2142,7 +2142,7 @@ public class ServiceManagerAdapter {
                 astl_category = "Security"
                 astl_sub_category = "Security Systems Availability"
 
-                astl_operational_device = true
+                astl_operational_device = "true"
 
                 default_flag = false
             }
@@ -2249,7 +2249,7 @@ public class ServiceManagerAdapter {
             //############## Policy "bcp_monitoring_usage" (C18277) #################
             if (event.category == "BCP_mon" && event.application == "BCP Backup" && MapOPR2SMUrgency[event.severity] == "3") {
                 astl_logical_name = event.object
-                astl_operational_device = true
+                astl_operational_device = "true"
                 astl_priority = "3"
 
                 default_flag = false
@@ -2267,7 +2267,7 @@ public class ServiceManagerAdapter {
                     astl_category = "Security"
                     astl_sub_category = "Security Systems Availability"
                     astl_title = event.application + ":" + event.title + ":" + astl_related_ci
-                    astl_operational_device = true
+                    astl_operational_device = "true"
                     astl_priority = "4"
                 }
 
@@ -2280,7 +2280,7 @@ public class ServiceManagerAdapter {
             if (event.category == "Performance" && event.application == "HP OSSPI" && event.object == "CPU_Wait_Util") {
 
                 astl_priority = "3"
-                astl_operational_device = true
+                astl_operational_device = "true"
 
                 default_flag = false
             }
