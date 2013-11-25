@@ -9,14 +9,15 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.apache.commons.logging.Log;
 
 import com.hp.opr.api.ws.model.event.OprEvent;
 
 public class AstelitCustomSection {
 
-	private ConfigurationParams confp = null;
+	/*private ConfigurationParams confp = null;
 	private LocalizationParams localp = null;
-	private XMLParams  xmlp = null;
+	private XMLParams  xmlp = null;*/
 	
 	private OprEvent event = null;
 	private String title = null;
@@ -28,12 +29,32 @@ public class AstelitCustomSection {
 	private StringBuffer activityLog = null;
 	private DocumentBuilder builder = null;
 	private Document doc = null;
+
+    private ServiceManagerAdapter sma;
+    private Log log = null;
 	
 	boolean isNewIncident = false;
 	int titleLength = 255;
 	int descriptionLength = 255;
 	
-	
+
+
+    public AstelitCustomSection(ServiceManagerAdapter sma, OprEvent event, boolean isNewIncident, String astl_title, String astl_description) throws ParserConfigurationException {
+        this.event = event;
+        this.isNewIncident = isNewIncident;
+        this.astl_description = astl_description;
+        this.astl_title = astl_title;
+        this.title = event.getTitle();
+        this.description = event.getDescription();
+        this.writer = new StringWriter();
+        this.activityLog = new StringBuffer();
+        this.sma = sma;
+
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        builder = docFactory.newDocumentBuilder();
+         //TODO implement getter for ServiceManagerAdapter
+        this.log = (Log) sma.m_log;
+    }
 	
 	public AstelitCustomSection(OprEvent event, String astl_title, String astl_description, boolean isNewIncident, ConfigurationParams confp, LocalizationParams localp, XMLParams xmlp) throws ParserConfigurationException{
 		this.event = event;
@@ -45,9 +66,9 @@ public class AstelitCustomSection {
 		this.writer = new StringWriter();
 		this.activityLog = new StringBuffer();
 		
-		this.confp = confp;
+		/*this.confp = confp;
 		this.localp = localp;
-		this.xmlp = xmlp;
+		this.xmlp = xmlp;*/
 				
 		
 		//Creation of document builder
@@ -74,7 +95,7 @@ public class AstelitCustomSection {
 					toTruncate.substring(0, length); }
 		}
 	}
-	@SuppressWarnings("unused")
+
 	private void truncater(String toTruncate){
 		truncater(toTruncate, titleLength);
 	}
@@ -138,13 +159,13 @@ public class AstelitCustomSection {
 //				xmlns: "${INCIDENT_XML_NAMESPACE}") {
 //
 			doc = builder.newDocument();
-			Element incident = doc.createElement(xmlp.getINCIDENT_TAG());
+			Element incident = doc.createElement(ServiceManagerAdapter.INCIDENT_TAG);
 			Attr incidentXMLRelationships = doc.createAttribute("relationships_included");
-			incidentXMLRelationships.setValue(xmlp.getINCIDENT_XML_RELATIONSHIPS());
+			incidentXMLRelationships.setValue(ServiceManagerAdapter.INCIDENT_XML_RELATIONSHIPS);
 			incident.setAttributeNode(incidentXMLRelationships);
-			incident.setAttribute("type", xmlp.getINCIDENT_XML_TYPE());
-			incident.setAttribute("version", xmlp.getINCIDENT_XML_VERSION());
-			incident.setAttribute("xmlns", xmlp.getINCIDENT_XML_NAMESPACE());
+			incident.setAttribute("type", ServiceManagerAdapter.INCIDENT_XML_TYPE);
+			incident.setAttribute("version", ServiceManagerAdapter.INCIDENT_XML_VERSION);
+			incident.setAttribute("xmlns", ServiceManagerAdapter.INCIDENT_XML_NAMESPACE);
 			doc.appendChild(incident);
 			
 			

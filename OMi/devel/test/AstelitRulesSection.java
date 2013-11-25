@@ -55,6 +55,8 @@ public class AstelitRulesSection {
     }
 
 
+    //TODO remove astl_ci_os_name
+
 	public boolean process() {
 		// check if this was called by forwardEvent() to create a new SM
 		// Incident

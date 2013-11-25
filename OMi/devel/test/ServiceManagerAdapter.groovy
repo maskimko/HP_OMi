@@ -504,6 +504,53 @@ public class ServiceManagerAdapter {
     // Important to use "def" here, otherwise a cast exception will be thrown and the m_log is set to <null>
     public def m_log
 
+    /**
+     * This method returns CI logical name
+     * according to ASTELIT rules
+      * @param currentEvent      source event of CI
+     * @param currentAstlLogicalName CI name that has been modified by ASTELIT custom rules
+     * @param eventLog logger to log method processing
+     * @param lineNumber Put here line number just for reference in code
+     * @return   CI name
+     */
+    private String ciResolver(OprEvent currentEvent, String currentAstlLogicalName, Log eventLog, int lineNumber){
+
+
+        if(eventLog.isDebugEnabled()){
+            eventLog.debug("Diving into ciResolver method from line number " +lineNumber);
+        }
+        String ciNameToReturn = null;
+
+        OprConfigurationItem currentCi = currentEvent.getRelatedCi().getConfigurationItem();
+        String currentCiName = currentCi.getCiName();
+
+
+
+        String fqdn = getDnsName(currentEvent);
+
+        if(eventLog.isDebugEnabled()){
+            eventLog.debug("We got CI name " + currentAstlLogicalName + " from node fqdn " + fqdn);
+            eventLog.debug("Determined CI was " + currentCiName);
+        }
+
+
+        if (fqdn.contains(currentAstlLogicalName)){
+            ciNameToReturn = fqdn;
+        } else {
+            ciNameToReturn = currentAstlLogicalName;
+
+        }
+        if (eventLog.isDebugEnabled()) {
+               if (!currentCiName.equals(currentAstlLogicalName)){
+                   eventLog.("So CI has been remapped");
+               }
+                eventLog.debug("And we choose " + ciNameToReturn);
+        }
+
+        return ciNameToReturn;
+
+    }
+
 
 
     private void debugOprEvent(OprEvent event, Log eventDebugLog, int lineNumber) {
@@ -2333,6 +2380,14 @@ public class ServiceManagerAdapter {
             }
             //############################ END Rule 35 ######################################
 
+
+
+            //Decide which name we would use
+
+
+            astl_logical_name = ciResolver(event, astl_logical_name, m_log, 2388);
+
+
             //Add custom attributes
 
 
@@ -3535,6 +3590,9 @@ public class ServiceManagerAdapter {
 
 
     }
+
+
+
 
     private void setBusinessService(OprEvent event, MarkupBuilder builder, StringBuffer activityLog) {
         // The following class and method only exists in 9.21 or greater
