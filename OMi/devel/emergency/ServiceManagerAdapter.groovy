@@ -642,11 +642,7 @@ public class ServiceManagerAdapter {
                 }
 
             }
-            /*
-            Changed Method to    setCustomAttributes
-             */
 
-            //TODO rewtire set to other method
             customAttributeList.setCustomAttributes(attributeArrayList);
             event.setCustomAttributes(customAttributeList);
 

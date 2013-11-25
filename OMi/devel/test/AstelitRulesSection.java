@@ -35,62 +35,27 @@ public class AstelitRulesSection {
 	// Not compatible to groovy mapping
 	// private static final EnumMap<OprSeverity, Integer> MapOPR2SMUrgency = new
 	// EnumMap<OprSeverity, Integer>(OprSeverity.class);
-	private Map<String, String> MapOPR2SMUrgency = null;
+
+    /*
+    The most important section
+     */
+    private Map<String, String> MapOPR2SMUrgency = null;
 	OprEvent event = null;
 	String externalRefId = null;
-	String causeExternalRefId = null;
-	OprIntegerPropertyChange duplicateChange = null;
+
 	
 	private static final String logDelimiter = "#=========ASTELIT RULES SECTION================#";
 	
 
-	public AstelitRulesSection(Map<String, String> MapOPR2SMUrgency,
-			OprEvent event, String externalRefId, String causeExternalRefId,
-			OprIntegerPropertyChange duplicateChange,
-			Boolean isNewIncident,
-			Boolean default_flag, String astl_assignment_group,
-			String astl_logical_name, String astl_priority,
-			String astl_urgency, String astl_title, String astl_description,
-			String astl_category, String astl_sub_category,
-			Boolean astl_operational_device, Log m_log) {
-		this.event = event;
-		this.externalRefId = externalRefId;
-		this.causeExternalRefId = causeExternalRefId;
-		this.duplicateChange = duplicateChange;
-		// Can be truth....
-		// MapOPR2SMUrgency.put(OprSeverity.critical, 1);
-		// MapOPR2SMUrgency.put(OprSeverity.major, 2);
-		// MapOPR2SMUrgency.put(OprSeverity.minor, 3);
-		// MapOPR2SMUrgency.put(OprSeverity.warning, 3);
-		// MapOPR2SMUrgency.put(OprSeverity.normal, 4);
-		// MapOPR2SMUrgency.put(OprSeverity.unknown, 4);
-		this.MapOPR2SMUrgency = MapOPR2SMUrgency;
-		this.isNewIncident = isNewIncident;
-		this.default_flag = default_flag;
+    public AstelitRulesSection(ServiceManagerAdapter sma, OprEvent event, String externalRefId){
+        this.astl_operational_device = sma.astl_operational_device.equals("true");
+        this.MapOPR2SMUrgency = sma.MapOPR2SMUrgency;
+        this.event = event;
+        this.externalRefId = externalRefId;
+    }
 
 
-		this.astl_assignment_group = astl_assignment_group;
-		this.astl_logical_name = astl_logical_name;
-		this.astl_priority = astl_priority;
-		this.astl_urgency = astl_urgency;
-		this.astl_title = astl_title;
-		this.astl_description = astl_description;
-		this.astl_category = astl_category;
-		this.astl_sub_category = astl_sub_category;
-		this.astl_operational_device = astl_operational_device;
-		this.m_log = m_log;
-		
-		if (log.isDebugEnabled()) {
-		log.debug(logDelimiter);
-		log.debug(this.event);
-		}
-		
-		m_log.info("m_log has been passed to AstelitRulesSection");
-
-	}
-
-	
-	public void process() {
+	public boolean process() {
 		// check if this was called by forwardEvent() to create a new SM
 		// Incident
 
@@ -953,6 +918,7 @@ public class AstelitRulesSection {
 		}
 		// ##################################### END ASTELIT RULES SECTION
 		// ##################################
+       return default_flag;
 	}
 
 	class Rule1 {
@@ -1456,8 +1422,7 @@ public class AstelitRulesSection {
 		}
 	}
 
-	// TODO test this !!!
-	// TODO Check this!
+	// TODO Check patterns
 	class Rule18 {
 		Pattern r18Pattern = null;
 		Matcher r18Matcher = null;
@@ -1473,7 +1438,7 @@ public class AstelitRulesSection {
 					&& event.getApplication().equals("TGW")) {
 
 				r18Pattern = Pattern
-						.compile("RTE interaction fails and delivers no result in operation [Interaction [RteModifyInteraction] failed");
+						.compile("RTE interaction fails and delivers no result in operation \\[Interaction \\[RteModifyInteraction\\] failed");
 				r18Matcher = r18Pattern.matcher(event.getTitle());
 				astl_logical_name = " ";
 				astl_assignment_group = "SN-AO-SCC";
@@ -1481,7 +1446,7 @@ public class AstelitRulesSection {
 
 				if (r18Matcher.matches()) {
 					r18Pattern2 = Pattern
-							.compile(".*ERROR.*[[.*?,.*?,(.*?),.*");
+							.compile(".*ERROR.*\\[\\[.*?,.*?,(.*?),.*");
 					r18Matcher2 = r18Pattern2.matcher(event.getTitle());
 
 					if (r18Matcher2.matches()) {
@@ -1493,7 +1458,7 @@ public class AstelitRulesSection {
 						.compile("[ReloadBalances] The line attribute [RMF] has an invalid value [null]");
 				r18Matcher3 = r18Pattern3.matcher(event.getTitle());
 				if (r18Matcher3.matches()) {
-					r18Pattern4 = Pattern.compile(".*ERROR [.*[[w+,s*+,s(d+)");
+					r18Pattern4 = Pattern.compile(".*ERROR \\[.*\\[\\[w+,s*+,s(d+)");
 					r18Matcher4 = r18Pattern.matcher(event.getTitle());
 
 					if (r18Matcher4.matches()) {
