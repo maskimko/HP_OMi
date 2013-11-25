@@ -542,7 +542,7 @@ public class ServiceManagerAdapter {
         }
         if (eventLog.isDebugEnabled()) {
                if (!currentCiName.equals(currentAstlLogicalName)){
-                   eventLog.("So CI has been remapped");
+                   eventLog.debug("So CI has been remapped");
                }
                 eventLog.debug("And we choose " + ciNameToReturn);
         }
