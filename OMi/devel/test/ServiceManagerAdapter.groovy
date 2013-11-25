@@ -1687,7 +1687,7 @@ public class ServiceManagerAdapter {
         boolean default_flag = true
 
         String astl_related_ci = null
-        String astl_ci_os_name = null
+
         String astl_assignment_group = null
         String astl_logical_name = null
         String astl_priority = null
@@ -1704,7 +1704,7 @@ public class ServiceManagerAdapter {
 
             final OprRelatedCi relatedCi_temp = event.relatedCi
             astl_related_ci = relatedCi_temp.configurationItem.ciName
-            astl_ci_os_name = relatedCi_temp.configurationItem.ciName + " OS"
+
 
             //## Rule 1:
             //## RFC C21126: "OVO Agent is using too many system resources" events ##
@@ -1817,7 +1817,7 @@ public class ServiceManagerAdapter {
             //## Rule 9:
             //##################### Performance Events ##############################
             if (event.category == "Performance" || event.object == "Connection_check") {
-                astl_logical_name = astl_ci_os_name
+                astl_logical_name = astl_related_ci
                 astl_operational_device = "true"
 
                 default_flag = false
@@ -1871,7 +1871,7 @@ public class ServiceManagerAdapter {
 
                 //# Configuring Auto Incidents from Serviceguard cluster (C20026)
                 if (event.title =~ /hpmcSG/)
-                    astl_logical_name = astl_ci_os_name
+                    astl_logical_name = astl_related_ci
 
                 myMatcher = (event.title =~ /(NO_SERVER_CI_OUTAGE_FLAG)(.*)/)
                 if (myMatcher.matches()) {
@@ -2067,7 +2067,7 @@ public class ServiceManagerAdapter {
             //## Rule 22
             //######################## NTP Events ###################################
             if (event.category == "Time" && event.application == "NTP" && event.object == "Time") {
-                astl_logical_name = astl_ci_os_name
+                astl_logical_name = astl_related_ci
                 astl_operational_device = "true"
 
                 default_flag = false
@@ -2207,7 +2207,7 @@ public class ServiceManagerAdapter {
             //## Rule 28
             //######################## Agent Errors #################################
             if (event.category == "OpC" && (event.application == "HP OpenView Operations" || event.application == "OM Agent") && (MapOPR2SMUrgency[event.severity] == "1" || MapOPR2SMUrgency[event.severity] == "2")) {
-                astl_logical_name = astl_ci_os_name
+                astl_logical_name = astl_related_ci
                 astl_assignment_group = "SN-AO-SCC"
                 astl_priority = "3"
 
