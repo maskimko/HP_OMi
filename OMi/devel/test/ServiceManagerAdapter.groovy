@@ -2392,7 +2392,7 @@ public class ServiceManagerAdapter {
 
 
             addCustomAttribute(event, "operational_device", astl_operational_device);
-            addCustomAttribute(event, "event_addon", "Happy New Year!");
+            addCustomAttribute(event, "event_addon", "Field for custom information");
             debugOprEvent(event, m_log, 2318);
         }
 

@@ -767,7 +767,7 @@ public class AstelitCustomSection {
 //			final String output = writer.toString()
 		
 
-			return ;
+			return "Okay";
 	//##################################### END ASTELIT CUSTOM SECTION #####################################	
 	}	
 }
