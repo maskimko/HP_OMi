@@ -1,78 +1,34 @@
 package emergency
 
-
-
-
 import com.hp.opr.api.Version
-import com.hp.opr.api.ws.adapter.ForwardChangeArgs
-import com.hp.opr.api.ws.adapter.ForwardEventArgs
-import com.hp.opr.api.ws.adapter.GetExternalEventArgs
-import com.hp.opr.api.ws.adapter.InitArgs
-import com.hp.opr.api.ws.adapter.PingArgs
-import com.hp.opr.api.ws.adapter.ReceiveChangeArgs
-import com.hp.opr.api.ws.model.event.OprAnnotation
-import com.hp.opr.api.ws.model.event.OprAnnotationList
-import com.hp.opr.api.ws.model.event.OprControlTransferInfo
-import com.hp.opr.api.ws.model.event.OprControlTransferStateEnum
-import com.hp.opr.api.ws.model.event.OprCustomAttribute
-import com.hp.opr.api.ws.model.event.OprCustomAttributeList
-import com.hp.opr.api.ws.model.event.OprEvent
-import com.hp.opr.api.ws.model.event.OprEventChange
-import com.hp.opr.api.ws.model.event.OprEventReference
-import com.hp.opr.api.ws.model.event.OprGroup
-import com.hp.opr.api.ws.model.event.OprPriority
-import com.hp.opr.api.ws.model.event.OprSeverity
-import com.hp.opr.api.ws.model.event.OprState
-import com.hp.opr.api.ws.model.event.OprSymptomList
-import com.hp.opr.api.ws.model.event.OprSymptomReference
-import com.hp.opr.api.ws.model.event.OprUser
-import com.hp.opr.api.ws.model.event.ci.OprConfigurationItem
-import com.hp.opr.api.ws.model.event.ci.OprForwardingInfo
-import com.hp.opr.api.ws.model.event.ci.OprForwardingTypeEnum
-import com.hp.opr.api.ws.model.event.ci.OprNodeReference
-import com.hp.opr.api.ws.model.event.ci.OprRelatedCi
-import com.hp.opr.api.ws.model.event.property.OprAnnotationPropertyChange
-import com.hp.opr.api.ws.model.event.property.OprCustomAttributePropertyChange
-import com.hp.opr.api.ws.model.event.property.OprEventPropertyChange
-import com.hp.opr.api.ws.model.event.property.OprEventPropertyNameEnum
-import com.hp.opr.api.ws.model.event.property.OprGroupPropertyChange
-import com.hp.opr.api.ws.model.event.property.OprIntegerPropertyChange
-import com.hp.opr.api.ws.model.event.property.OprPropertyChangeOperationEnum
-import com.hp.opr.api.ws.model.event.property.OprSymptomPropertyChange
-import com.hp.opr.api.ws.model.event.property.OprUserPropertyChange
+import com.hp.opr.api.ws.adapter.*
+import com.hp.opr.api.ws.model.event.*
+import com.hp.opr.api.ws.model.event.ci.*
+import com.hp.opr.api.ws.model.event.property.*
 import com.hp.opr.common.ws.client.WinkClientSupport
 import com.hp.ucmdb.api.UcmdbService
 import com.hp.ucmdb.api.UcmdbServiceFactory
 import com.hp.ucmdb.api.UcmdbServiceProvider
-import com.hp.ucmdb.api.topology.QueryDefinition
-import com.hp.ucmdb.api.topology.QueryLink
-import com.hp.ucmdb.api.topology.QueryNode
-import com.hp.ucmdb.api.topology.Topology
-import com.hp.ucmdb.api.topology.TopologyCount
-import com.hp.ucmdb.api.topology.TopologyQueryService
-import com.hp.ucmdb.api.topology.TopologyUpdateFactory
+import com.hp.ucmdb.api.topology.*
 import com.hp.ucmdb.api.topology.indirectlink.IndirectLink
 import com.hp.ucmdb.api.topology.indirectlink.IndirectLinkStepToPart
 import com.hp.ucmdb.api.types.TopologyCI
 import com.hp.ucmdb.api.types.UcmdbId
 import groovy.util.slurpersupport.GPathResult
 import groovy.xml.MarkupBuilder
-import java.security.cert.X509Certificate
-import java.text.SimpleDateFormat
+import org.apache.commons.codec.binary.Base64
+import org.apache.commons.logging.Log
+import org.apache.wink.client.*
+
 import javax.ws.rs.core.Cookie
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.MultivaluedMap
 import javax.xml.bind.JAXBElement
-import org.apache.commons.codec.binary.Base64
-import org.apache.wink.client.ClientRequest
-import org.apache.wink.client.ClientResponse
-import org.apache.wink.client.ClientWebException
-import org.apache.wink.client.Resource
-import org.apache.wink.client.RestClient
+import javax.xml.namespace.QName
+import java.security.cert.X509Certificate
+import java.text.SimpleDateFormat
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import javax.xml.namespace.QName;
-import org.apache.commons.logging.Log;
 
 public class ServiceManagerAdapter {
 
@@ -83,12 +39,12 @@ public class ServiceManagerAdapter {
     // See the OMi Extensibility Guide document for complete details on customizing the OMi to SM integration
 
     // Change 'webtier-9.30' in the following to match the name of the web application installed on the target SM server
-    private static final String SM_WEB_TIER_NAME = 'sm'
+    public static final String SM_WEB_TIER_NAME = 'sm'
 
     // BSM Administrator login name
     // For OMi events that are forwarded via a forwarding rule, the SM "is_recorded_by" field is set to this user,
     // otherwise it is set to the OMi operator that initiated the manual transfer.
-    private static final String BSM_ADMINISTRATOR_LOGIN_NAME = 'admin'
+    public static final String BSM_ADMINISTRATOR_LOGIN_NAME = 'admin'
 
     // The following RTSM variables are used on pre 9.21 releases to determine the affected business service.
     // If set, the most critically affected business service, in relation to the related CI of the event,
@@ -113,12 +69,12 @@ public class ServiceManagerAdapter {
 
     // Maps the OPR event 'state' to the SM incident 'status'
     //
-    private static final Map MapOPR2SMStatus = ["open": "open", "in_progress": "work-in-progress",
+    public static final Map MapOPR2SMStatus = ["open": "open", "in_progress": "work-in-progress",
             "resolved": "resolved", "closed": "resolved"]
 
     // Maps the SM incident 'status' to OPR event 'state'
     //
-    private static final Map MapSM2OPRState = ["accepted": "open", "assigned": "open", "open": "open", "reopened": "open",
+    public static final Map MapSM2OPRState = ["accepted": "open", "assigned": "open", "open": "open", "reopened": "open",
             "pending-change": "in_progress", "pending-customer": "in_progress", "pending-other": "in_progress",
             "pending-vendor": "in_progress", "referred": "in_progress", "suspended": "in_progress",
             "work-in-progress": "in_progress", "rejected": "resolved", "replaced-problem": "resolved",
@@ -126,25 +82,25 @@ public class ServiceManagerAdapter {
 
     // Maps OPR event 'severity' to SM incident 'urgency'
     //
-    private static final Map MapOPR2SMUrgency = ["critical": "1", "major": "2", "minor": "3", "warning": "3",
+    public static final Map MapOPR2SMUrgency = ["critical": "1", "major": "2", "minor": "3", "warning": "3",
             "normal": "4", "unknown": "4"]
 
     // Maps SM incident 'urgency' to OPR event 'severity'
     //
-    private static final Map MapSM2OPRSeverity = ["1": "critical", "2": "major", "3": "minor", "4": "normal"]
+    public static final Map MapSM2OPRSeverity = ["1": "critical", "2": "major", "3": "minor", "4": "normal"]
 
     // Maps OPR event 'priority' to SM incident 'priority'
     //
-    private static final Map MapOPR2SMPriority = ["highest": "1", "high": "2", "medium": "3", "low": "4",
+    public static final Map MapOPR2SMPriority = ["highest": "1", "high": "2", "medium": "3", "low": "4",
             "lowest": "4", "none": "4"]
 
     // Maps SM incident 'priority' to OPR event 'priority'
     //
-    private static final Map MapSM2OPRPriority = ["1": "highest", "2": "high", "3": "medium", "4": "low"]
+    public static final Map MapSM2OPRPriority = ["1": "highest", "2": "high", "3": "medium", "4": "low"]
 
     // SM Completion Code value to use on close of the SM incident
     //
-    private static final String SMCompletionCode = 'Automatically Closed'
+    public static final String SMCompletionCode = 'Automatically Closed'
 
     // ****************************************************************************************************
     // * The following sets control which properties and enumerated values are synchronized on change.    *
@@ -161,16 +117,16 @@ public class ServiceManagerAdapter {
      * Switched back at 19:11   as it disables correct behaviour of astl_operational_device flag
      *
      */
-    private static final boolean SyncAllProperties = true
+    public static final boolean SyncAllProperties = true
 
     // Specifies that the node should be used instead of the event related CI
     // as the "is_registered_for" CI in the incident
-    private static final boolean UseNodeCI = false
+    public static final boolean UseNodeCI = false
 
     // In 9.21 or greater the most critical affected business service is added to the Incident.
     // The following flag control whether the business service most closely related to the Related CI is
     // sent or are all affected business services recursively searched for the most critically affected.
-    private static final boolean RecursiveSearchBusinessServices = true
+    public static final boolean RecursiveSearchBusinessServices = true
 
     // Flag to disable checking for out of sync state of 'closed'.
     // The response of the SM incident update is checked if the state of the Incident is 'closed'.
@@ -178,7 +134,7 @@ public class ServiceManagerAdapter {
     // automatically closed by the script. Requires SyncSMStatusToOPR to contain 'closed' state
     // and SyncSMPropertiesToOPR to contain 'incident_status'.
     // This feature is only available on release 9.21 or later.
-    private static final boolean DisableCheckCloseOnUpdate = false
+    public static final boolean DisableCheckCloseOnUpdate = false
 
     // OPR event properties to synchronize to a corresponding SM incident property on change:
     //
@@ -187,7 +143,7 @@ public class ServiceManagerAdapter {
     // If synchronization on change is desired for an OPR event property, add the property to the list. It will
     // then be synchronized to a corresponding SM property whenever the event property is changed in OMi.
     //
-    private static final Set SyncOPRPropertiesToSM = ["state", "solution", "cause", "custom_attribute", "operational_device", "event_addon"]
+    public static final Set SyncOPRPropertiesToSM = ["state", "solution", "cause", "custom_attribute", "operational_device", "event_addon"]
 
     // OPR event properties to synchronize to a corresponding SM Incident "activity log" on change:
     //
@@ -199,7 +155,7 @@ public class ServiceManagerAdapter {
     //
 
 
-    private static final Set SyncOPRPropertiesToSMActivityLog = ["title", "description", "state", "severity", "priority",
+    public static final Set SyncOPRPropertiesToSMActivityLog = ["title", "description", "state", "severity", "priority",
             "annotation", "duplicate_count", "cause", "symptom", "assigned_user", "assigned_group", "custom_attribute", "event_addon"]
 
     // SM Incident properties to synchronize to a corresponding OPR Event property on change:
@@ -211,43 +167,43 @@ public class ServiceManagerAdapter {
     //
 
     //TODO check Opr or SM syntax of field Event Addon
-    private static final Set SyncSMPropertiesToOPR = ["incident_status", "solution", "operational_device", "event_addon", "custom_attribute"]
+    public static final Set SyncSMPropertiesToOPR = ["incident_status", "solution", "operational_device", "event_addon", "custom_attribute"]
 
     // OPR event states to synchronize to the SM incident status on change.
     //
     // If synchronize on change for an event 'state' is desired, add it to the list. "*" specifies all states.
     // NOTE: "state" must be included in SyncOPRPropertiesToSM or this list is ignored.
-    private static final Set SyncOPRStatesToSM = ["closed"]
+    public static final Set SyncOPRStatesToSM = ["closed"]
 
     // OPR event severities to synchronize to the SM incident urgency on change.
     //
     // If synchronize on change for an event 'severity' is desired, add it to the list. "*" specifies all severities.
     // NOTE: "severity" must be included in SyncOPRPropertiesToSM or this list is ignored.
-    private static final Set SyncOPRSeveritiesToSM = ["*"]
+    public static final Set SyncOPRSeveritiesToSM = ["*"]
 
     // OPR event priorities to synchronize to the SM incident priority on change.
     //
     // If synchronize on change for an event 'priority' is desired, add it to the list. "*" specifies all priorities.
     // NOTE: "priority" must be included in SyncOPRPropertiesToSM or this list is ignored.
-    private static final Set SyncOPRPrioritiesToSM = ["*"]
+    public static final Set SyncOPRPrioritiesToSM = ["*"]
 
     // SM incident status to synchronize to the OM event states on change to this incident property:
     //
     // If synchronize on change for an incident 'status' is desired, add it to the list. "*" specifies all status.
     // NOTE: "status" must be included in SyncSMPropertiesToOPR or this list is ignored.
-    private static final Set SyncSMStatusToOPR = ["closed"]
+    public static final Set SyncSMStatusToOPR = ["closed"]
 
     // SM incident urgencies to synchronize to the OM event severities on change to this incident property:
     //
     // If synchronize on change for an incident 'urgency' is desired, add it to the list. "*" specifies all urgencies.
     // NOTE: "urgency" must be included in SyncSMPropertiesToOPR or this list is ignored.
-    private static final Set SyncSMUrgenciesToOPR = ["*"]
+    public static final Set SyncSMUrgenciesToOPR = ["*"]
 
     // SM incident priorities to synchronize to the OM event priorities on change to this incident property:
     //
     // If synchronize on change for an incident 'priority' is desired, add it to the list. "*" specifies all priorities.
     // NOTE: "priority" must be included in SyncSMPropertiesToOPR or this list is ignored.
-    private static final Set SyncSMPrioritiesToOPR = ["*"]
+    public static final Set SyncSMPrioritiesToOPR = ["*"]
 
     // Map the specified OPR custom attributes to an SM incident property for synchronization.
     // Add a CA name to the map along with SM incident property name (XML tag name).
@@ -255,14 +211,14 @@ public class ServiceManagerAdapter {
     //
     // NOTE: Only top-level SM incident properties are supported in this map.
     // EXAMPLE: ["MyCustomCA" : "activity_log", "MyCustomCA_1" : "SMCustomAttribute" ]
-    //private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "operational_device": ACTIVITY_LOG_TAG, "event_addon": "EventAddon", "event_addon": ACTIVITY_LOG_TAG ]
-    private static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice", "event_addon": "EventAddon"]
+    //public static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "operational_device": ACTIVITY_LOG_TAG, "event_addon": "EventAddon", "event_addon": ACTIVITY_LOG_TAG ]
+    public static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice", "event_addon": "EventAddon"]
 
     // Map the specified SM incident properties to an OPR event custom attribute for synchronization.
     // Add an SM incident property name to the map along with OPR event custom attribute name.
     //
     // EXAMPLE: ["incident_status" : "SMIncidentStatus"]
-    private static final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device", "EventAddon": "event_addon"]
+    public static final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device", "EventAddon": "event_addon"]
     // **********************************************************************
     // * END Configuration: Customization of properties for synchronization *
     // **********************************************************************
@@ -274,235 +230,282 @@ public class ServiceManagerAdapter {
     // SM Urgency values:
     // The text value will be displayed in the external info tab.
     // NOTE: This text may be localized for the desired locale.
-    private static final Map SMUrgency = ["1": "1 - Critical", "2": "2 - High", "3": "3 - Average", "4": "4 - Low"]
+    public static final Map SMUrgency = ["1": "1 - Critical", "2": "2 - High", "3": "3 - Average", "4": "4 - Low"]
 
     // SM Priority values:
     // The text value will be displayed in the external info tab.
     // NOTE: This text may be localized for the desired locale.
-    private static final Map SMPriority = ["1": "1 - Critical", "2": "2 - High", "3": "3 - Average", "4": "4 - Low"]
+    public static final Map SMPriority = ["1": "1 - Critical", "2": "2 - High", "3": "3 - Average", "4": "4 - Low"]
 
     // Change the following to customize the date format in the annotation entries synchronized to the SM activity log
     // See Java SimpleDateFormat for details on the syntax of the two parameters.
     // e.g., to set Japanese locale: LOCALE = Locale.JAPAN
-    private static final Locale LOCALE = Locale.getDefault()
-    private static final String ANNOTATION_DATE_FORMAT = "yyyy.MM.dd HH:mm:ss z"
+    public static final Locale LOCALE = Locale.getDefault()
+    public static final String ANNOTATION_DATE_FORMAT = "yyyy.MM.dd HH:mm:ss z"
 
     // In SM the description is a required attribute. In case it is not set in BSM this value is taken.
     // An empty string is NOT allowed.
-    private static final String EMPTY_DESCRIPTION_OVERRIDE = "<none>"
+    public static final String EMPTY_DESCRIPTION_OVERRIDE = "<none>"
 
 
 
 
 
-    private String astl_operational_device = "false"
+    public String astl_operational_device = "false"
 
     // SM Incident Activity Log text.
     // This text is prefixed to the appropriate OPR event property when synchronizing it to an SM Incident activity log.
     // NOTE: This text may be localized for the desired locale.
-    private static final String ACTIVITY_LOG_TITLE = "[Title]"
-    private static final String ACTIVITY_LOG_TITLE_CHANGE = "Event title changed to: "
-    private static final String ACTIVITY_LOG_STATE = "[State]"
-    private static final String ACTIVITY_LOG_STATE_CHANGE = "Event state changed to: "
-    private static final String ACTIVITY_LOG_DESCRIPTION = "[Description]"
-    private static final String ACTIVITY_LOG_DESCRIPTION_CHANGE = "Event description changed to: "
-    private static final String ACTIVITY_LOG_SOLUTION = "[Solution]"
-    private static final String ACTIVITY_LOG_SOLUTION_CHANGE = "Event solution changed to: "
-    private static final String ACTIVITY_LOG_ASSIGNED_USER = "[Assigned User]"
-    private static final String ACTIVITY_LOG_ASSIGNED_USER_CHANGE = "Event assigned user changed to: "
-    private static final String ACTIVITY_LOG_ASSIGNED_GROUP = "[Assigned Group]"
-    private static final String ACTIVITY_LOG_ASSIGNED_GROUP_CHANGE = "Event assigned group changed to: "
-    private static final String ACTIVITY_LOG_UNASSIGNED = "<unassigned>"
-    private static final String ACTIVITY_LOG_SEVERITY = "[Severity]"
-    private static final String ACTIVITY_LOG_SEVERITY_CHANGE = "Event severity changed to: "
-    private static final String ACTIVITY_LOG_PRIORITY = "[Priority]"
-    private static final String ACTIVITY_LOG_PRIORITY_CHANGE = "Event priority changed to: "
-    private static final String ACTIVITY_LOG_CONTROL_TRANSFERRED_TO = "[Control Transferred To]"
-    private static final String ACTIVITY_LOG_CONTROL_TRANSFERRED_TO_CHANGED = "Event control transfer state changed to: "
-    private static final String ACTIVITY_LOG_CATEGORY = "[Category]"
-    private static final String ACTIVITY_LOG_SUBCATEGORY = "[Subcategory]"
-    private static final String ACTIVITY_LOG_APPLICATION = "[Application]"
-    private static final String ACTIVITY_LOG_OBJECT = "[Object]"
-    private static final String ACTIVITY_LOG_ANNOTATION = "[Annotation]"
-    private static final String ACTIVITY_LOG_CA = "[Custom Attribute]"
-    private static final String ACTIVITY_LOG_CAUSE = "[Cause]"
-    private static final String ACTIVITY_LOG_OMI_CAUSE = "[OMi Cause]"
-    private static final String ACTIVITY_LOG_OMI_SYMPTOM = "[OMi Symptom]"
-    private static final String ACTIVITY_LOG_DUPLICATE_COUNT = "[Duplicate Count]"
-    private static final String ACTIVITY_LOG_PREVIOUS = "previous"
-    private static final String ACTIVITY_LOG_CURRENT = "current"
-    private static final String ACTIVITY_LOG_INITIATED_BY = "[Initiated by]"
-    private static final String ACTIVITY_LOG_INITIATED_BY_RULE = "BSM forwarding rule: "
-    private static final String ACTIVITY_LOG_INITIATED_BY_USER = "BSM operator: "
-    private static final String ACTIVITY_LOG_RELATED_CI = "[BSM Related CI]"
-    private static final String ACTIVITY_LOG_RELATED_CI_TYPE_LABEL = "Type label: "
-    private static final String ACTIVITY_LOG_RELATED_CI_TYPE = "Type: "
-    private static final String ACTIVITY_LOG_RELATED_CI_LABEL = "Display label: "
-    private static final String ACTIVITY_LOG_RELATED_CI_NAME = "Name: "
-    private static final String ACTIVITY_LOG_RELATED_CI_HOSTED_ON = "Hosted on: "
-    private static final String ACTIVITY_LOG_RELATED_CI_URL = "Cross launch URL: "
-    private static final String ACTIVITY_LOG_AFFECTS_SERVICES = "[BSM Affects Business Services (name : criticality)]"
-    private static final String ACTIVITY_LOG_TIME_RECEIVED = "[Time OMi Received Event]"
-    private static final String ACTIVITY_LOG_TIME_CREATED = "[Time OMi Event Created]"
-    private static final String ACTIVITY_LOG_TIME_STATE_CHANGED = "[Time OMi Event State Changed]"
-    private static final String ACTIVITY_LOG_ORIGINAL_DATA = "[Original Data]"
-    private static final String ACTIVITY_LOG_OPERATIONAL_DATA = "[CI is operational]"
+    public static final String ACTIVITY_LOG_TITLE = "[Title]"
+    public static final String ACTIVITY_LOG_TITLE_CHANGE = "Event title changed to: "
+    public static final String ACTIVITY_LOG_STATE = "[State]"
+    public static final String ACTIVITY_LOG_STATE_CHANGE = "Event state changed to: "
+    public static final String ACTIVITY_LOG_DESCRIPTION = "[Description]"
+    public static final String ACTIVITY_LOG_DESCRIPTION_CHANGE = "Event description changed to: "
+    public static final String ACTIVITY_LOG_SOLUTION = "[Solution]"
+    public static final String ACTIVITY_LOG_SOLUTION_CHANGE = "Event solution changed to: "
+    public static final String ACTIVITY_LOG_ASSIGNED_USER = "[Assigned User]"
+    public static final String ACTIVITY_LOG_ASSIGNED_USER_CHANGE = "Event assigned user changed to: "
+    public static final String ACTIVITY_LOG_ASSIGNED_GROUP = "[Assigned Group]"
+    public static final String ACTIVITY_LOG_ASSIGNED_GROUP_CHANGE = "Event assigned group changed to: "
+    public static final String ACTIVITY_LOG_UNASSIGNED = "<unassigned>"
+    public static final String ACTIVITY_LOG_SEVERITY = "[Severity]"
+    public static final String ACTIVITY_LOG_SEVERITY_CHANGE = "Event severity changed to: "
+    public static final String ACTIVITY_LOG_PRIORITY = "[Priority]"
+    public static final String ACTIVITY_LOG_PRIORITY_CHANGE = "Event priority changed to: "
+    public static final String ACTIVITY_LOG_CONTROL_TRANSFERRED_TO = "[Control Transferred To]"
+    public static final String ACTIVITY_LOG_CONTROL_TRANSFERRED_TO_CHANGED = "Event control transfer state changed to: "
+    public static final String ACTIVITY_LOG_CATEGORY = "[Category]"
+    public static final String ACTIVITY_LOG_SUBCATEGORY = "[Subcategory]"
+    public static final String ACTIVITY_LOG_APPLICATION = "[Application]"
+    public static final String ACTIVITY_LOG_OBJECT = "[Object]"
+    public static final String ACTIVITY_LOG_ANNOTATION = "[Annotation]"
+    public static final String ACTIVITY_LOG_CA = "[Custom Attribute]"
+    public static final String ACTIVITY_LOG_CAUSE = "[Cause]"
+    public static final String ACTIVITY_LOG_OMI_CAUSE = "[OMi Cause]"
+    public static final String ACTIVITY_LOG_OMI_SYMPTOM = "[OMi Symptom]"
+    public static final String ACTIVITY_LOG_DUPLICATE_COUNT = "[Duplicate Count]"
+    public static final String ACTIVITY_LOG_PREVIOUS = "previous"
+    public static final String ACTIVITY_LOG_CURRENT = "current"
+    public static final String ACTIVITY_LOG_INITIATED_BY = "[Initiated by]"
+    public static final String ACTIVITY_LOG_INITIATED_BY_RULE = "BSM forwarding rule: "
+    public static final String ACTIVITY_LOG_INITIATED_BY_USER = "BSM operator: "
+    public static final String ACTIVITY_LOG_RELATED_CI = "[BSM Related CI]"
+    public static final String ACTIVITY_LOG_RELATED_CI_TYPE_LABEL = "Type label: "
+    public static final String ACTIVITY_LOG_RELATED_CI_TYPE = "Type: "
+    public static final String ACTIVITY_LOG_RELATED_CI_LABEL = "Display label: "
+    public static final String ACTIVITY_LOG_RELATED_CI_NAME = "Name: "
+    public static final String ACTIVITY_LOG_RELATED_CI_HOSTED_ON = "Hosted on: "
+    public static final String ACTIVITY_LOG_RELATED_CI_URL = "Cross launch URL: "
+    public static final String ACTIVITY_LOG_AFFECTS_SERVICES = "[BSM Affects Business Services (name : criticality)]"
+    public static final String ACTIVITY_LOG_TIME_RECEIVED = "[Time OMi Received Event]"
+    public static final String ACTIVITY_LOG_TIME_CREATED = "[Time OMi Event Created]"
+    public static final String ACTIVITY_LOG_TIME_STATE_CHANGED = "[Time OMi Event State Changed]"
+    public static final String ACTIVITY_LOG_ORIGINAL_DATA = "[Original Data]"
+    public static final String ACTIVITY_LOG_OPERATIONAL_DATA = "[CI is operational]"
 
     // ****************************************************************************
     // * END Localization: Customization of text values for language localization *
     // ****************************************************************************
 
-    private UcmdbServiceProvider ucmdbProvider = null
-    private UcmdbService ucmdbService = null
+    public UcmdbServiceProvider ucmdbProvider = null
+    public UcmdbService ucmdbService = null
 
     // For debugging purposes. Saves the TQLs for analysis in the UI.
-    private static final boolean SaveTQLQuery = false
+    public static final boolean SaveTQLQuery = false
 
     // Specify ActiveProcess in request
-    private static final Boolean SpecifyActiveProcess = true
+    public static final Boolean SpecifyActiveProcess = true
 
     // Specify ImpactScope in request
-    private static final Boolean SpecifyImpactScope = true
+    public static final Boolean SpecifyImpactScope = true
 
     // URL paths
-    private static final String DRILLDOWN_ROOT_PATH =
+    public static final String DRILLDOWN_ROOT_PATH =
         "/${SM_WEB_TIER_NAME}/index.do?ctx=docEngine&file=probsummary&query=number%3D"
-    private static final String OMI_ROOT_DRILLDOWN_PATH = '/opr-console/opr-evt-details.jsp?eventId='
-    private static final String BSM_CI_DRILLDOWN_PATH = '/topaz/dash/nodeDetails.do?cmdbId='
-    private static final String ROOT_PATH = '/SM/7/rest/1.1/incident_list'
-    private static final String PING_QUERY = "reference_number='IM10001'"
-    private static final String INCIDENT_PATH = ROOT_PATH + '/reference_number/'
+    public static final String OMI_ROOT_DRILLDOWN_PATH = '/opr-console/opr-evt-details.jsp?eventId='
+    public static final String BSM_CI_DRILLDOWN_PATH = '/topaz/dash/nodeDetails.do?cmdbId='
+    public static final String ROOT_PATH = '/SM/7/rest/1.1/incident_list'
+    public static final String PING_QUERY = "reference_number='IM10001'"
+    public static final String INCIDENT_PATH = ROOT_PATH + '/reference_number/'
 
     // Custom properties file path: This is relative to the BSM install directory.
-    private static final String CUSTOM_PROPERTIES_FILE = '/conf/opr/integration/sm/custom.properties'
+    public static final String CUSTOM_PROPERTIES_FILE = '/conf/opr/integration/sm/custom.properties'
 
     // *****************************************
     // * SM Incident XML tag names & constants *
     // *****************************************
 
     // SM supports the BDM 1.0 and 1.1 model, the groovy script deals only with the 1.1 specification
-    private static final String INCIDENT_XML_NAMESPACE = 'http://www.hp.com/2009/software/data_model'
-    private static final String INCIDENT_TAG = 'incident'
-    private static final String TITLE_TAG = 'name'
-    private static final String DESCRIPTION_TAG = 'description'
-    private static final String REFERENCE_NUMBER_TAG = 'reference_number'
-    private static final String INCIDENT_STATUS_TAG = 'incident_status'
-    private static final String COMPLETION_CODE_TAG = 'completion_code'
-    private static final String URGENCY_TAG = 'urgency'
-    private static final String PRIORITY_TAG = 'priority'
-    private static final String SOLUTION_TAG = 'solution'
-    private static final String OWNER_TAG = 'is_owned_by'
-    private static final String ASSIGNED_TAG = 'has_assigned'
-    private static final String ASSIGNED_GROUP_TAG = 'has_assigned_group'
-    private static final String FUNCTIONAL_GROUP_TAG = 'functional_group'
-    private static final String RECORDED_BY_TAG = 'is_recorded_by'
-    private static final String REQUESTED_BY_TAG = 'is_requested_by'
-    private static final String PARTY_TAG = 'party'
-    private static final String PERSON_TAG = 'person'
-    private static final String UI_NAME_TAG = 'display_label'
-    private static final String NAME_TAG = 'name'
-    private static final String EXTERNAL_PROCESS_ID_TAG = 'external_process_reference'
-    private static final String IMPACT_SCOPE_TAG = 'impact_scope'
-    private static final String CONFIGURATION_ITEM_TAG = 'configuration_item'
-    private static final String CATEGORY_TAG = 'category'
-    private static final String SUB_CATEGORY_TAG = 'sub_category'
-    private static final String CI_RELATIONSHIP = 'is_registered_for'
-    private static final String CI_TARGET_TYPE_TAG = 'target_type'
-    private static final String CI_GLOBALID_TAG = 'target_global_id'
-    private static final String CI_TYPE_TAG = 'type'
-    private static final String CI_ID_TAG = 'id'
-    private static final String CI_NAME_TAG = 'name'
-    private static final String CI_DISPLAY_LABEL_TAG = 'display_label'
-    private static final String AFFECTS_RELATIONSHIP = 'affects_business_service'
-    private static final String NODE_RELATIONSHIP = 'is_hosted_on'
-    private static final String NODE_DNS_NAME_TAG = 'primary_dns_name'
-    private static final String ACTIVITY_LOG_TAG = 'activity_log'
-    private static final String ACTIVITY_LOG_DESC_TAG = 'description'
-    private static final String ACTIVITY_LOG_ANNO_TAG = 'annotations'
-    private static final String IS_CAUSED_BY = 'is_caused_by'
-    private static final String MASTER_REFERENCE_TAG = 'master_reference_number'
-    private static final String OPERATIONAL_DEVICE_TAG = 'operational_device'
+    public static final String INCIDENT_XML_NAMESPACE = 'http://www.hp.com/2009/software/data_model'
+    public static final String INCIDENT_TAG = 'incident'
+    public static final String TITLE_TAG = 'name'
+    public static final String DESCRIPTION_TAG = 'description'
+    public static final String REFERENCE_NUMBER_TAG = 'reference_number'
+    public static final String INCIDENT_STATUS_TAG = 'incident_status'
+    public static final String COMPLETION_CODE_TAG = 'completion_code'
+    public static final String URGENCY_TAG = 'urgency'
+    public static final String PRIORITY_TAG = 'priority'
+    public static final String SOLUTION_TAG = 'solution'
+    public static final String OWNER_TAG = 'is_owned_by'
+    public static final String ASSIGNED_TAG = 'has_assigned'
+    public static final String ASSIGNED_GROUP_TAG = 'has_assigned_group'
+    public static final String FUNCTIONAL_GROUP_TAG = 'functional_group'
+    public static final String RECORDED_BY_TAG = 'is_recorded_by'
+    public static final String REQUESTED_BY_TAG = 'is_requested_by'
+    public static final String PARTY_TAG = 'party'
+    public static final String PERSON_TAG = 'person'
+    public static final String UI_NAME_TAG = 'display_label'
+    public static final String NAME_TAG = 'name'
+    public static final String EXTERNAL_PROCESS_ID_TAG = 'external_process_reference'
+    public static final String IMPACT_SCOPE_TAG = 'impact_scope'
+    public static final String CONFIGURATION_ITEM_TAG = 'configuration_item'
+    public static final String CATEGORY_TAG = 'category'
+    public static final String SUB_CATEGORY_TAG = 'sub_category'
+    public static final String CI_RELATIONSHIP = 'is_registered_for'
+    public static final String CI_TARGET_TYPE_TAG = 'target_type'
+    public static final String CI_GLOBALID_TAG = 'target_global_id'
+    public static final String CI_TYPE_TAG = 'type'
+    public static final String CI_ID_TAG = 'id'
+    public static final String CI_NAME_TAG = 'name'
+    public static final String CI_DISPLAY_LABEL_TAG = 'display_label'
+    public static final String AFFECTS_RELATIONSHIP = 'affects_business_service'
+    public static final String NODE_RELATIONSHIP = 'is_hosted_on'
+    public static final String NODE_DNS_NAME_TAG = 'primary_dns_name'
+    public static final String ACTIVITY_LOG_TAG = 'activity_log'
+    public static final String ACTIVITY_LOG_DESC_TAG = 'description'
+    public static final String ACTIVITY_LOG_ANNO_TAG = 'annotations'
+    public static final String IS_CAUSED_BY = 'is_caused_by'
+    public static final String MASTER_REFERENCE_TAG = 'master_reference_number'
+    public static final String OPERATIONAL_DEVICE_TAG = 'operational_device'
 
-    private static final String IS_CAUSED_BY_ROLE =
+    public static final String IS_CAUSED_BY_ROLE =
         'urn:x-hp:2009:software:data_model:relationship:incident:is_caused_by:incident'
 
     // Constant values
-    private static final String IMPACT_LABEL_VALUE = 'Enterprise'
-    private static final String IT_PROCESS_CATEGORY = 'incident'
-    private static final String INCIDENT_TYPE = 'incident'
-    private static final String IMPACT_SCOPE = 'site-dept'
-    private static final String INCIDENT_XML_VERSION = '1.1'
-    private static final String INCIDENT_XML_TYPE = 'urn:x-hp:2009:software:data_model:type:incident'
-    private static final String CI_TARGET_TYPE = 'urn:x-hp:2009:software:data_model:type:configuration_item'
-    private static final String CONFIGURATION_ITEM_ROLE = INCIDENT_XML_TYPE + ':is_registered_for:configuration_item'
-    private static final String BUSINESS_SERVICE_ROLE = INCIDENT_XML_TYPE + ':affects_business_service:business_service'
-    private static final String NODE_ITEM_ROLE = CI_TARGET_TYPE + ':is_hosted_on:node'
-    private static final String INCIDENT_XML_RELATIONSHIPS = 'false'
-    private static final String TYPE_BUSINESS_SERVICE = 'business_service'
-    private static final String REL_IMPACT = 'impact_link'
-    private static final String ATTR_GLOBAL_ID = 'global_id'
-    private static final String ATTR_NAME = 'name'
-    private static final String ATTR_LABEL = 'display_label'
-    private static final String ATTR_BUSINESS_CRITICALITY = 'business_criticality'
+    public static final String IMPACT_LABEL_VALUE = 'Enterprise'
+    public static final String IT_PROCESS_CATEGORY = 'incident'
+    public static final String INCIDENT_TYPE = 'incident'
+    public static final String IMPACT_SCOPE = 'site-dept'
+    public static final String INCIDENT_XML_VERSION = '1.1'
+    public static final String INCIDENT_XML_TYPE = 'urn:x-hp:2009:software:data_model:type:incident'
+    public static final String CI_TARGET_TYPE = 'urn:x-hp:2009:software:data_model:type:configuration_item'
+    public static final String CONFIGURATION_ITEM_ROLE = INCIDENT_XML_TYPE + ':is_registered_for:configuration_item'
+    public static final String BUSINESS_SERVICE_ROLE = INCIDENT_XML_TYPE + ':affects_business_service:business_service'
+    public static final String NODE_ITEM_ROLE = CI_TARGET_TYPE + ':is_hosted_on:node'
+    public static final String INCIDENT_XML_RELATIONSHIPS = 'false'
+    public static final String TYPE_BUSINESS_SERVICE = 'business_service'
+    public static final String REL_IMPACT = 'impact_link'
+    public static final String ATTR_GLOBAL_ID = 'global_id'
+    public static final String ATTR_NAME = 'name'
+    public static final String ATTR_LABEL = 'display_label'
+    public static final String ATTR_BUSINESS_CRITICALITY = 'business_criticality'
 
-    private static final String SET_COOKIE_HEADER = "Set-Cookie"
+    public static final String SET_COOKIE_HEADER = "Set-Cookie"
 
     // Astelit Default Variable
-    private static final String ASTELIT_CATEGORY = 'Auto'
-    private static final String ASTELIT_SUB_CATEGORY = 'Auto'
+    public static final String ASTELIT_CATEGORY = 'Auto'
+    public static final String ASTELIT_SUB_CATEGORY = 'Auto'
 
     // ***********************************
     // * Class instance member variables *
     // ***********************************
 
     // date formatter
-    private final SimpleDateFormat dateFormatter = new SimpleDateFormat(ANNOTATION_DATE_FORMAT, LOCALE)
-    private final Map<String, String> m_idMap1 = new HashMap<String, String>()
-    private final Map<String, String> m_idMap2 = new HashMap<String, String>()
-    private Boolean m_useMap1 = true
+    public final SimpleDateFormat dateFormatter = new SimpleDateFormat(ANNOTATION_DATE_FORMAT, LOCALE)
+    public final Map<String, String> m_idMap1 = new HashMap<String, String>()
+    public final Map<String, String> m_idMap2 = new HashMap<String, String>()
+    public Boolean m_useMap1 = true
 
-    private String m_connectedServerId = null
-    private String m_connectedServerName = null
-    private String m_connectedServerDisplayName = null
-    private X509Certificate m_connectedServerCertificate = null
-    private Integer m_timeout = null
-    private RestClient m_client = null
+    public String m_connectedServerId = null
+    public String m_connectedServerName = null
+    public String m_connectedServerDisplayName = null
+    public X509Certificate m_connectedServerCertificate = null
+    public Integer m_timeout = null
+    public RestClient m_client = null
 
-    private String m_protocol = 'http'
-    private String m_node = 'localhost'
-    private Integer m_port = 13080
-    private String m_home = ''
-    private Integer m_oprVersion = 0
+    public String m_protocol = 'http'
+    public String m_node = 'localhost'
+    public Integer m_port = 13080
+    public String m_home = ''
+    public Integer m_oprVersion = 0
 
     // Maintain Cookies
-    private Set<Cookie> m_smCookies = new HashSet<Cookie>()
+    public Set<Cookie> m_smCookies = new HashSet<Cookie>()
 
     // Sets of properties to synchronize in each direction
-    private Set m_oprSyncProperties = []
-    private Set m_smSyncProperties = [REFERENCE_NUMBER_TAG]
+    public Set m_oprSyncProperties = []
+    public Set m_smSyncProperties = [REFERENCE_NUMBER_TAG]
 
     // custom properties
-    private Properties m_properties = new Properties()
+    public Properties m_properties = new Properties()
 
     // OPR CA synchronize to SM map
-    private final Map<String, String> m_OPR2SMCustomAttribute = [:]
+    public final Map<String, String> m_OPR2SMCustomAttribute = [:]
 
     // Sync 'all' boolean flags
-    private final boolean syncAllOPRPropertiesToSM = SyncAllProperties || SyncOPRPropertiesToSM.contains("*")
-    private final boolean syncAllOPRPropertiesToSMActivityLog = SyncAllProperties || SyncOPRPropertiesToSMActivityLog.contains("*")
-    private final boolean syncAllOPRStatesToSM = SyncAllProperties || SyncOPRStatesToSM.contains("*")
-    private final boolean syncAllOPRSeveritiesToSM = SyncAllProperties || SyncOPRSeveritiesToSM.contains("*")
-    private final boolean syncAllOPRPrioritiesToSM = SyncAllProperties || SyncOPRPrioritiesToSM.contains("*")
-    private final boolean syncAllSMPropertiesToOPR = SyncAllProperties || SyncSMPropertiesToOPR.contains("*")
-    private final boolean syncAllSMStatusToOPR = SyncAllProperties || SyncSMStatusToOPR.contains("*")
-    private final boolean syncAllSMUrgenciesToOPR = SyncAllProperties || SyncSMUrgenciesToOPR.contains("*")
-    private final boolean syncAllSMPrioritiesToOPR = SyncAllProperties || SyncSMPrioritiesToOPR.contains("*")
-    private final boolean syncCheckForClose = (!DisableCheckCloseOnUpdate &&
+    public final boolean syncAllOPRPropertiesToSM = SyncAllProperties || SyncOPRPropertiesToSM.contains("*")
+    public final boolean syncAllOPRPropertiesToSMActivityLog = SyncAllProperties || SyncOPRPropertiesToSMActivityLog.contains("*")
+    public final boolean syncAllOPRStatesToSM = SyncAllProperties || SyncOPRStatesToSM.contains("*")
+    public final boolean syncAllOPRSeveritiesToSM = SyncAllProperties || SyncOPRSeveritiesToSM.contains("*")
+    public final boolean syncAllOPRPrioritiesToSM = SyncAllProperties || SyncOPRPrioritiesToSM.contains("*")
+    public final boolean syncAllSMPropertiesToOPR = SyncAllProperties || SyncSMPropertiesToOPR.contains("*")
+    public final boolean syncAllSMStatusToOPR = SyncAllProperties || SyncSMStatusToOPR.contains("*")
+    public final boolean syncAllSMUrgenciesToOPR = SyncAllProperties || SyncSMUrgenciesToOPR.contains("*")
+    public final boolean syncAllSMPrioritiesToOPR = SyncAllProperties || SyncSMPrioritiesToOPR.contains("*")
+    public final boolean syncCheckForClose = (!DisableCheckCloseOnUpdate &&
             (syncAllSMPropertiesToOPR || SyncSMPropertiesToOPR.contains("incident_status") &&
                     (syncAllSMStatusToOPR || SyncSMStatusToOPR.contains("closed"))))
 
     // Important to use "def" here, otherwise a cast exception will be thrown and the m_log is set to <null>
-    private def m_log
+    public def m_log
+
+    /**
+     * This method returns CI logical name
+     * according to ASTELIT rules
+     * @param currentEvent      source event of CI
+     * @param currentAstlLogicalName CI name that has been modified by ASTELIT custom rules
+     * @param eventLog logger to log method processing
+     * @param lineNumber Put here line number just for reference in code
+     * @return   CI name
+     */
+    private String ciResolver(OprEvent currentEvent, String currentAstlLogicalName, Log eventLog, int lineNumber){
+
+
+        if(eventLog.isDebugEnabled()){
+            eventLog.debug("Diving into ciResolver method from line number " +lineNumber);
+        }
+        String ciNameToReturn = null;
+
+        OprConfigurationItem currentCi = currentEvent.getRelatedCi().getConfigurationItem();
+        String currentCiName = currentCi.getCiName();
+
+
+
+        String fqdn = getDnsName(currentEvent);
+
+        if(eventLog.isDebugEnabled()){
+            eventLog.debug("We got CI name " + currentAstlLogicalName + " from node fqdn " + fqdn);
+            eventLog.debug("Determined CI was " + currentCiName);
+        }
+
+
+        if (fqdn.contains(currentAstlLogicalName)){
+            ciNameToReturn = fqdn;
+        } else {
+            ciNameToReturn = currentAstlLogicalName;
+
+        }
+        if (eventLog.isDebugEnabled()) {
+            if (!currentCiName.equals(currentAstlLogicalName)){
+                eventLog.debug("So CI has been remapped");
+            }
+            eventLog.debug("And we choose " + ciNameToReturn);
+        }
+
+        return ciNameToReturn;
+
+    }
 
 
 
@@ -1687,7 +1690,7 @@ public class ServiceManagerAdapter {
         boolean default_flag = true
 
         String astl_related_ci = null
-        String astl_ci_os_name = null
+
         String astl_assignment_group = null
         String astl_logical_name = null
         String astl_priority = null
@@ -1704,7 +1707,7 @@ public class ServiceManagerAdapter {
 
             final OprRelatedCi relatedCi_temp = event.relatedCi
             astl_related_ci = relatedCi_temp.configurationItem.ciName
-            astl_ci_os_name = relatedCi_temp.configurationItem.ciName + " OS"
+
 
             //## Rule 1:
             //## RFC C21126: "OVO Agent is using too many system resources" events ##
@@ -1817,7 +1820,7 @@ public class ServiceManagerAdapter {
             //## Rule 9:
             //##################### Performance Events ##############################
             if (event.category == "Performance" || event.object == "Connection_check") {
-                astl_logical_name = astl_ci_os_name
+                astl_logical_name = astl_related_ci
                 astl_operational_device = "true"
 
                 default_flag = false
@@ -1871,7 +1874,7 @@ public class ServiceManagerAdapter {
 
                 //# Configuring Auto Incidents from Serviceguard cluster (C20026)
                 if (event.title =~ /hpmcSG/)
-                    astl_logical_name = astl_ci_os_name
+                    astl_logical_name = astl_related_ci
 
                 myMatcher = (event.title =~ /(NO_SERVER_CI_OUTAGE_FLAG)(.*)/)
                 if (myMatcher.matches()) {
@@ -2067,7 +2070,7 @@ public class ServiceManagerAdapter {
             //## Rule 22
             //######################## NTP Events ###################################
             if (event.category == "Time" && event.application == "NTP" && event.object == "Time") {
-                astl_logical_name = astl_ci_os_name
+                astl_logical_name = astl_related_ci
                 astl_operational_device = "true"
 
                 default_flag = false
@@ -2207,7 +2210,7 @@ public class ServiceManagerAdapter {
             //## Rule 28
             //######################## Agent Errors #################################
             if (event.category == "OpC" && (event.application == "HP OpenView Operations" || event.application == "OM Agent") && (MapOPR2SMUrgency[event.severity] == "1" || MapOPR2SMUrgency[event.severity] == "2")) {
-                astl_logical_name = astl_ci_os_name
+                astl_logical_name = astl_related_ci
                 astl_assignment_group = "SN-AO-SCC"
                 astl_priority = "3"
 
@@ -2309,7 +2312,9 @@ public class ServiceManagerAdapter {
 
                 myMatcher = (event.object =~ /(\w+\sOS):(.*)/)
                 if (myMatcher.matches()) {
-                    astl_logical_name = myMatcher[0][1]
+                   String oldLogicalName = myMatcher[0][1];
+
+                    astl_logical_name = oldLogicalName.replaceAll(" OS", "");
                     astl_assignment_group = myMatcher[0][2]
                     astl_category = "Security"
                     astl_sub_category = "Security Systems Availability"
@@ -2333,11 +2338,19 @@ public class ServiceManagerAdapter {
             }
             //############################ END Rule 35 ######################################
 
+
+
+            //Decide which name we would use
+
+
+            astl_logical_name = ciResolver(event, astl_logical_name, m_log, 2388);
+
+
             //Add custom attributes
 
 
             addCustomAttribute(event, "operational_device", astl_operational_device);
-            addCustomAttribute(event, "event_addon", "Happy New Year!");
+            addCustomAttribute(event, "event_addon", "Field for custom information");
             debugOprEvent(event, m_log, 2318);
         }
 
@@ -2442,7 +2455,7 @@ public class ServiceManagerAdapter {
                     final OprRelatedCi relatedCi = event.relatedCi
                     final String dnsName = getDnsName(event)
                     // Astelit's Default Related CI Name
-                    String astelitRelatedCI = relatedCi.configurationItem.ciName + " OS"
+                    String astelitRelatedCI = relatedCi.configurationItem.ciName
 
                     if (relatedCi != null && !UseNodeCI) {
                         // send 'is_registered_for' CI information using event related CI
@@ -3054,7 +3067,7 @@ public class ServiceManagerAdapter {
                     final OprRelatedCi relatedCi = event.relatedCi
                     final String dnsName = getDnsName(event)
                     // Astelit's Default Related CI Name
-                    String astelitRelatedCI = relatedCi.configurationItem.ciName + " OS"
+                    String astelitRelatedCI = relatedCi.configurationItem.ciName;
 
                     if (relatedCi != null && !UseNodeCI) {
                         // send 'is_registered_for' CI information using event related CI
@@ -3535,6 +3548,9 @@ public class ServiceManagerAdapter {
 
 
     }
+
+
+
 
     private void setBusinessService(OprEvent event, MarkupBuilder builder, StringBuffer activityLog) {
         // The following class and method only exists in 9.21 or greater
