@@ -1,5 +1,4 @@
-package emergency
-
+package emergency;
 import com.hp.opr.api.Version
 import com.hp.opr.api.ws.adapter.*
 import com.hp.opr.api.ws.model.event.*
@@ -489,12 +488,22 @@ public class ServiceManagerAdapter {
             eventLog.debug("Determined CI was " + currentCiName);
         }
 
+        if (currentAstlLogicalName != null) {
 
-        if (fqdn.contains(currentAstlLogicalName)){
-            ciNameToReturn = fqdn;
+
+            if (fqdn.contains(currentAstlLogicalName)){
+                ciNameToReturn = fqdn;
+            } else {
+                ciNameToReturn = currentAstlLogicalName;
+
+            }
         } else {
-            ciNameToReturn = currentAstlLogicalName;
+            if (fqdn.contains(currentCiName)){
+                ciNameToReturn = fqdn;
 
+            }   else {
+                ciNameToReturn = currentCiName;
+            }
         }
         if (eventLog.isDebugEnabled()) {
             if (!currentCiName.equals(currentAstlLogicalName)){
@@ -842,6 +851,22 @@ public class ServiceManagerAdapter {
     public Boolean forwardEvent(ForwardEventArgs args) {
         if ((m_oprVersion < 920) && (args.event.node != null))
             getNodeProperties(args)
+
+
+        /*
+        Here we debug ForwardeEventArgs
+         */
+        if (m_log.isDebugEnabled()){
+            OprEvent debugEvent = args.getEvent();
+            if (debugEvent.getRelatedCi() == null){
+                m_log.debug("Debug forwardEvent: we have no relatedCi in event id: " + debugEvent.getId());
+            } else {
+                m_log.debug("We event id: " + debugEvent.getId() + " has relatedCi id" + debugEvent.getRelatedCi().getId());
+            }
+        }
+
+
+
 
         String extId = sendEvent(args.event, args.info, null, args.credentials, args)
         if (extId != null) {
@@ -1704,10 +1729,20 @@ public class ServiceManagerAdapter {
 
 //##################################### ASTELIT RULES SECTION #####################################
         if (isNewIncident) {
+            try {
 
-            final OprRelatedCi relatedCi_temp = event.relatedCi
-            astl_related_ci = relatedCi_temp.configurationItem.ciName
-
+                astl_related_ci = event.getRelatedCi().getConfigurationItem().getCiName();
+            } catch (NullPointerException npe) {
+                npe.println("We got an exception while trying to get event related ci");
+                npe.printStackTrace();
+                if (m_log.isDebugEnabled()){
+                    m_log.debug("We got an exception while trying to get event related ci")   ;
+                    m_log.debug("Event node: " + event.getNode() + " source CI: " + event.getSourceCi() + " related CI: " + event.getRelatedCi().getConfigurationItem().getCiName());
+                    if (event.getRelatedCi().getConfigurationItem().getCiName() == null) {
+                        m_log.debug("event " +event.getId()+ "has no related CI");
+                    }
+                }
+            }
 
             //## Rule 1:
             //## RFC C21126: "OVO Agent is using too many system resources" events ##
@@ -2312,7 +2347,7 @@ public class ServiceManagerAdapter {
 
                 myMatcher = (event.object =~ /(\w+\sOS):(.*)/)
                 if (myMatcher.matches()) {
-                   String oldLogicalName = myMatcher[0][1];
+                    String oldLogicalName = myMatcher[0][1];
 
                     astl_logical_name = oldLogicalName.replaceAll(" OS", "");
                     astl_assignment_group = myMatcher[0][2]
@@ -2343,7 +2378,7 @@ public class ServiceManagerAdapter {
             //Decide which name we would use
 
 
-            astl_logical_name = ciResolver(event, astl_logical_name, m_log, 2388);
+            astl_logical_name = ciResolver(event, astl_logical_name, m_log, 2346);
 
 
             //Add custom attributes

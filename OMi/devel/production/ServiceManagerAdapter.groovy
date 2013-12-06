@@ -1,4 +1,4 @@
-package production
+package emergency
 
 import com.hp.opr.api.Version
 import com.hp.opr.api.ws.adapter.*
