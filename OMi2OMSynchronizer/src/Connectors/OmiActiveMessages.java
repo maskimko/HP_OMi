@@ -97,7 +97,7 @@ public class OmiActiveMessages {
 			
 			int messagesQuantity = omiAM.getActiveMessagesCount();
 			if (!omiAM.human){
-				System.out.println(messagesQuantity);
+				System.out.print(messagesQuantity);
 			}
 			
 		} catch (ParseException pe) {
