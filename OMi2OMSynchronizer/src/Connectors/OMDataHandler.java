@@ -10,27 +10,21 @@ import java.util.TreeSet;
 
 import oracle.jdbc.pool.OracleDataSource;
 
-public class OMiDataHandler {
+public class OMDataHandler {
 
-//	
-//	private static String username = "bsm_event";
-//	private static String password = "msbph";
-//	private static String databaseName = "HPBSM";
-//	private static String dbHostname = "krass.sdab.sn";
-
-	private static String username = "bsm_event";
-	private static String password = "msbph";
-	private static String databaseName = "HPBSM";
-	private static String dbHostname = "bsmdb.sdab.sn";
-	private static int dbPort = 1521;
 	
+	private static String username = "opc_op";
+	private static String password = "opc_op";
+	private static String databaseName = "openview";
+	private static String dbHostname = "10.1.50.191";
+	private static int dbPort = 1521;
 	
 	public Set<String> getAllActiveMessages(Connection conn) throws SQLException{
 		Set<String> activeMessageId = new TreeSet<String>();
 		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("SELECT id FROM all_events WHERE state != 'CLOSED' AND control_external_id IS NULL");
+		ResultSet rs = stmt.executeQuery("SELECT message_number FROM opc_act_messages");
 		while (rs.next()){
-			String msgId = rs.getString("ID");
+			String msgId = rs.getString("MESSAGE_NUMBER");
 			activeMessageId.add(msgId);
 		}
 		return activeMessageId;
@@ -43,7 +37,6 @@ public class OMiDataHandler {
 		connectionProps.put("password", password);
 		connectionProps.put("databaseName", databaseName);
 		
-		//String connectionUrl  = "jdbc:oracle:thin:" + username  + "/" + password + "@krass.sdab.sn:1521:" + databaseName;
 		String connectionUrl  = "jdbc:oracle:thin:@"+dbHostname+":"+dbPort+":" + databaseName;
 		OracleDataSource ds = new OracleDataSource();
 		ds.setURL(connectionUrl);
@@ -51,7 +44,5 @@ public class OMiDataHandler {
 		conn = ds.getConnection();
 		return conn;
 	}
-	
-
 	
 }
