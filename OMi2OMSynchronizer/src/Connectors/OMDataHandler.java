@@ -1,5 +1,6 @@
 package Connectors;
 
+import gui.MessageRow;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,13 +20,15 @@ public class OMDataHandler {
 	private static String dbHostname = "10.1.50.191";
 	private static int dbPort = 1521;
 	
-	public Set<String> getAllActiveMessages(Connection conn) throws SQLException{
-		Set<String> activeMessageId = new TreeSet<String>();
+	public Set<MessageRow> getAllActiveMessages(Connection conn) throws SQLException{
+		Set<MessageRow> activeMessageId = new TreeSet<MessageRow >();
 		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("SELECT message_number FROM opc_act_messages");
+                MessageRow mr = null;
+		ResultSet rs = stmt.executeQuery("SELECT message_number, message_group, application, object, severity  FROM opc_act_messages");
 		while (rs.next()){
-			String msgId = rs.getString("MESSAGE_NUMBER");
-			activeMessageId.add(msgId);
+                    mr = new MessageRow(false, rs.getString("MESSAGE_NUMBER"), SeverityMapper.getOMiSeverityFromOMSeverity(rs.getInt("SEVERITY")), rs.getString("APPLICATION"), rs.getString("MESSAGE_GROUP"), rs.getString("OBJECT"));
+			
+			activeMessageId.add(mr);
 		}
 		return activeMessageId;
 	}

@@ -7,6 +7,7 @@ import java.sql.Statement;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import gui.MessageRow;
 
 import oracle.jdbc.pool.OracleDataSource;
 
@@ -16,7 +17,7 @@ public class OMiDataHandler {
 //	private static String username = "bsm_event";
 //	private static String password = "msbph";
 //	private static String databaseName = "HPBSM";
-//	private static String dbHostname = "krass.sdab.sn";
+        //private static String dbHostname = "krass.sdab.sn";
 
 	private static String username = "bsm_event";
 	private static String password = "msbph";
@@ -25,15 +26,17 @@ public class OMiDataHandler {
 	private static int dbPort = 1521;
 	
 	
-	public Set<String> getAllActiveMessages(Connection conn) throws SQLException{
-		Set<String> activeMessageId = new TreeSet<String>();
+	public Set<MessageRow> getAllActiveMessages(Connection conn) throws SQLException{
+		Set<MessageRow> activeMessages = new TreeSet<MessageRow>();
 		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("SELECT id FROM all_events WHERE state != 'CLOSED' AND control_external_id IS NULL");
+                MessageRow mr = null;
+		ResultSet rs = stmt.executeQuery("SELECT id,  category, application, object, severity FROM all_events WHERE state != 'CLOSED' AND control_external_id IS NULL");
 		while (rs.next()){
-			String msgId = rs.getString("ID");
-			activeMessageId.add(msgId);
+                    mr = new MessageRow(false, rs.getString("ID"), rs.getString("SEVERITY"), rs.getString("APPLICATION"), rs.getString("CATEGORY"), rs.getString("OBJECT"));
+                    
+			activeMessages.add(mr);
 		}
-		return activeMessageId;
+		return activeMessages;
 	}
 	
 	public Connection getDBConnection() throws SQLException {

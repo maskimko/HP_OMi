@@ -46,6 +46,15 @@ public class MessageTable extends JPanel{
         add(scrollpane);
     }
     
+    public MessageTable(MessageTableModel mtm){
+        super(new GridLayout(1,0));
+        JTable msgTable = new JTable(mtm);
+        msgTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
+        msgTable.setFillsViewportHeight(true);
+        JScrollPane sp = new JScrollPane(msgTable);
+        add(sp);
+    }
+    
     private void printDebugData(JTable table){
         int numRows = table.getRowCount();
         int numColumns = table.getColumnCount();
@@ -80,6 +89,24 @@ public class MessageTable extends JPanel{
         frame.pack();
         frame.setVisible(true);
         
+    }
+    
+    
+    public void showTableGui(){
+        JFrame frame = new JFrame("Choose events to close");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        JPanel highlight = new JPanel();
+       
+        JLabel hlabel = new JLabel("Difference table");
+        highlight.add(hlabel);
+      
+        mainPanel.add(highlight, BorderLayout.NORTH);
+        mainPanel.add(this, BorderLayout.CENTER);
+        frame.setContentPane(mainPanel);
+        frame.pack();
+        frame.setVisible(true); 
     }
     
     public static void main(String[] args){
