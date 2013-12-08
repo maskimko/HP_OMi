@@ -11,7 +11,7 @@ package gui;
  * @author maskimko
  */
  public class MessageRow implements Comparable<MessageRow> {
-        public Boolean closeEvent = false;
+        public boolean closeEvent = false;
         public String eventId;
         public String severity;
         public String application;
@@ -58,6 +58,16 @@ package gui;
             }
             
         } 
+        
+        /*
+        Critical ff0000
+        Major   ff8000
+        Minor   ffff00
+        Warning 00ffff
+        Normal  00ff00
+        Unknown 0080ff
+        */
+        
         
         public void setValueAt(int columnIndex, Object value) throws IllegalArgumentException{
             switch (columnIndex){
