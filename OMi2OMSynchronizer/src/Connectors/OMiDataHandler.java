@@ -8,6 +8,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import gui.MessageRow;
+import gui.MessageSeverity;
 
 import oracle.jdbc.pool.OracleDataSource;
 
@@ -32,7 +33,7 @@ public class OMiDataHandler {
                 MessageRow mr = null;
 		ResultSet rs = stmt.executeQuery("SELECT id,  category, application, object, severity FROM all_events WHERE state != 'CLOSED' AND control_external_id IS NULL");
 		while (rs.next()){
-                    mr = new MessageRow(false, rs.getString("ID"), rs.getString("SEVERITY"), rs.getString("APPLICATION"), rs.getString("CATEGORY"), rs.getString("OBJECT"));
+                    mr = new MessageRow(false, rs.getString("ID"), new MessageSeverity(rs.getString("SEVERITY")), rs.getString("APPLICATION"), rs.getString("CATEGORY"), rs.getString("OBJECT"));
                     
 			activeMessages.add(mr);
 		}

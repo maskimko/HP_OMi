@@ -52,6 +52,7 @@ public class MessageTable extends JPanel{
         msgTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
         msgTable.setFillsViewportHeight(true);
         JScrollPane sp = new JScrollPane(msgTable);
+        msgTable.setDefaultRenderer(MessageSeverity.class, new SeverityRenderer(true));
         add(sp);
     }
     

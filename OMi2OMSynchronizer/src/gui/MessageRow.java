@@ -13,7 +13,7 @@ package gui;
  public class MessageRow implements Comparable<MessageRow> {
         public boolean closeEvent = false;
         public String eventId;
-        public String severity;
+        public MessageSeverity severity;
         public String application;
         public String category;
         public String msgObject;
@@ -21,7 +21,7 @@ package gui;
         public MessageRow(){
         }
         
-   public MessageRow(boolean closeEvent, String eventId, String severity, String application, String category, String object) throws NullPointerException{
+   public MessageRow(boolean closeEvent, String eventId, MessageSeverity severity, String application, String category, String object) throws NullPointerException{
        this.closeEvent = closeEvent;
        if(eventId != null) {
            this.eventId = eventId;
@@ -78,20 +78,20 @@ package gui;
                             closeEvent = Boolean.parseBoolean((String)value);
                      
                     } else throw new IllegalArgumentException("Cannot parse value");
-                    
+                        break;
                   
                 case 1:
                     eventId = (String) value;
-               
+               break;
                 case 2:
-                    severity = (String) value;
-                   
+                    severity = (MessageSeverity) value;
+                   break;
                 case 3:
                     application = (String) value;
-                   
+                   break;
                 case 4: 
                     category = (String) value;
-                  
+                  break;
                 case 5:
                     msgObject = (String) value;
                 default:
@@ -116,4 +116,25 @@ package gui;
     public int compareTo(MessageRow o) {
        return this.eventId.compareTo(o.eventId);
     }
+    
+    public static Class getDataClass(int column){
+         switch (column){
+                case 0: 
+                    return Boolean.class;
+                case 1:
+                    return String.class;
+                case 2:
+                   
+                   return MessageSeverity.class;
+                case 3:
+                    return String.class;
+                case 4: 
+                    return String.class;
+                case 5:
+                   return String.class;
+                default:
+                    throw new IllegalArgumentException("Last column index is 5");
+            }
+    }
+    
     }

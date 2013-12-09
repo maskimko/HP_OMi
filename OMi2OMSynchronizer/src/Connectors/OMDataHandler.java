@@ -1,6 +1,7 @@
 package Connectors;
 
 import gui.MessageRow;
+import gui.MessageSeverity;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,7 +27,7 @@ public class OMDataHandler {
                 MessageRow mr = null;
 		ResultSet rs = stmt.executeQuery("SELECT message_number, message_group, application, object, severity  FROM opc_act_messages");
 		while (rs.next()){
-                    mr = new MessageRow(false, rs.getString("MESSAGE_NUMBER"), SeverityMapper.getOMiSeverityFromOMSeverity(rs.getInt("SEVERITY")), rs.getString("APPLICATION"), rs.getString("MESSAGE_GROUP"), rs.getString("OBJECT"));
+                    mr = new MessageRow(false, rs.getString("MESSAGE_NUMBER"), new MessageSeverity(rs.getInt("SEVERITY")), rs.getString("APPLICATION"), rs.getString("MESSAGE_GROUP"), rs.getString("OBJECT"));
 			
 			activeMessageId.add(mr);
 		}

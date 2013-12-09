@@ -1,4 +1,4 @@
-/*
+/*g
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -26,16 +26,7 @@ public class SeverityRenderer extends JLabel implements TableCellRenderer {
     Border selectedBorder = null;
     boolean isBordered = true;
     
-    private static Map<String, Color> colorMap;
-    static {
-        colorMap = new HashMap<String, Color>();
-        colorMap.put("CRITICAL", new Color(0xff0000));
-        colorMap.put("MAJOR", new Color(0xff8000));
-        colorMap.put("MINOR", new Color(0xffff00));
-        colorMap.put("WARNING", new Color(0x00ffff));
-        colorMap.put("NORMAL", new Color(0x00ff00));
-        colorMap.put("UNKNOWN", new Color(0x0080ff));
-    }
+   
     
     
     public SeverityRenderer(boolean isBordered){
@@ -43,20 +34,13 @@ public class SeverityRenderer extends JLabel implements TableCellRenderer {
         setOpaque(true);
     }
     
-   private static Color getColorForSeverity(Object value){
-       Color returnColor = null;
-       if (value.getClass().equals(String.class)){
-           returnColor = colorMap.get((String) value);
-       } else {
-           returnColor = Color.WHITE;
-       }
-       return returnColor;
-   } 
+  
     
     
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-        Color newColor = getColorForSeverity(value);
+        MessageSeverity ms = (MessageSeverity) value;
+        Color newColor = ms.getSeverityColor();
         setBackground(newColor);
         if (isBordered){
             if (isSelected){
@@ -72,6 +56,7 @@ public class SeverityRenderer extends JLabel implements TableCellRenderer {
                 setBorder(unselectedBorder);
             }
         }
+        setText(ms.getSeverity());
         setToolTipText("RGB value is: " + newColor.getRed() + ", " + newColor.getGreen() + ", " + newColor.getBlue());
         return this;
     }

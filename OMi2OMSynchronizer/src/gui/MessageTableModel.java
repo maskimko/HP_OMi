@@ -84,5 +84,23 @@ public class MessageTableModel extends AbstractTableModel {
        return data.get(rowIndex).getValueAt(columnIndex);
     }
     
+    @Override
+    public void setValueAt(Object value, int row, int columnIndex){
+        data.get(row).setValueAt(columnIndex, value);
+        fireTableCellUpdated(row, columnIndex);
+    }
+    
+    @Override
+    public Class getColumnClass(int c){
+        return MessageRow.getDataClass(c);
+    }
   
+    @Override 
+        public boolean isCellEditable(int row, int col){
+        if (col == 0) {
+            return true; 
+        } else {
+            return false;
+        }
+    }
 }
