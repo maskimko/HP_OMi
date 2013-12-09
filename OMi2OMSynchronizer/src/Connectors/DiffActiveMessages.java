@@ -38,6 +38,9 @@ public class DiffActiveMessages {
                         MessageTable mt = new MessageTable(new MessageTableModel(diff));
                         MessageTableRunner mtr = new MessageTableRunner(mt);
                         SwingUtilities.invokeLater(mtr);
+                        mt.addInfoText("OMi active messages quantity: " + omiMsg.size() + "\n");
+                        mt.addInfoText("OM active messages quantity: " + omMsg.size() + "\n");
+                        mt.addInfoText("This difference table contains: " + diff.size() + "\n");
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block

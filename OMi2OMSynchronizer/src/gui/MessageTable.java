@@ -6,149 +6,156 @@
 
 package gui;
 
+import Connectors.OmiEventCloser;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.management.MalformedObjectNameException;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.SwingUtilities;
+import javax.swing.JTextArea;
 import javax.swing.table.TableModel;
 
 /**
  *
  * @author maskimko
  */
-public class MessageTable extends JPanel{
+public class MessageTable extends JPanel {
     
     public static boolean debug = false;
+    MessageTableModel tableModel = null;
+    JTable msgTable = null;
+    private JTextArea infoText = null;
     
-    public MessageTable(){
+    public MessageTable(MessageTableModel mtm) {
         super(new GridLayout(1, 0));
-        String[] columnNames = {"Message id", "Severity", "Node", "Message text"};
-        Object[][] data = {
-            {"test_id", "Warning", "vm-cacti.sdab.sn", "First row message"},
-            {"test_identity", "Major", "vm-cacti-new.sdab.sn", "Some text"}
-        };
-        JTable msgTable = new JTable(data, columnNames);
-        msgTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
-        msgTable.setFillsViewportHeight(true);
-        
-        if (debug){
-          MsgTableListener mtl = new MsgTableListener(msgTable);
-          msgTable.addMouseListener(mtl);
-        }
-        JScrollPane scrollpane = new JScrollPane(msgTable);
-        add(scrollpane);
-    }
-    
-    public MessageTable(MessageTableModel mtm){
-        super(new GridLayout(1,0));
-        JTable msgTable = new JTable(mtm);
-        msgTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
+        this.tableModel = mtm;
+        msgTable = new JTable(tableModel);
+        msgTable.setPreferredScrollableViewportSize(new Dimension(700, 200));
         msgTable.setFillsViewportHeight(true);
         JScrollPane sp = new JScrollPane(msgTable);
         msgTable.setDefaultRenderer(MessageSeverity.class, new SeverityRenderer(true));
+        infoText = new JTextArea(8, 70);
+        infoText.setEditable(false);
         add(sp);
     }
     
-    private void printDebugData(JTable table){
-        int numRows = table.getRowCount();
-        int numColumns = table.getColumnCount();
-        TableModel model = table.getModel();
-        
-        System.out.println("Value of data:");
-        for (int i = 0; i < numRows; i++){
-            System.out.print("   row: " + i + ":");
-                for (int j=0; j < numColumns; j++){
-                    System.out.print(" " + model.getValueAt(i, j));
-                }
-                System.out.println();
-                
-        }
-        System.out.println("-------------------------------------------");
+    public void addInfoText(String text) {
+        infoText.append(text);
     }
     
-    
-    public static void createAndShowGui(){
+    public void showTableGui() {
         JFrame frame = new JFrame("Choose events to close");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
         JPanel highlight = new JPanel();
-        JPanel tablePanel = new MessageTable(); 
+        highlight.setLayout(new FlowLayout());
+        JButton selectAllEvents = new JButton("Select all");
+        selectAllEvents.addActionListener(new SelectAllEventsListener(selectAllEvents));
+        JButton closeEvents = new JButton("Close events");
+        closeEvents.addActionListener(new CloseEventsListener());
         JLabel hlabel = new JLabel("Difference table");
         highlight.add(hlabel);
-      
-        mainPanel.add(highlight, BorderLayout.NORTH);
-        mainPanel.add(tablePanel, BorderLayout.CENTER);
-        frame.setContentPane(mainPanel);
-        frame.pack();
-        frame.setVisible(true);
+        highlight.add(selectAllEvents);
+        highlight.add(closeEvents);
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BorderLayout());
         
-    }
-    
-    
-    public void showTableGui(){
-        JFrame frame = new JFrame("Choose events to close");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BorderLayout());
-        JPanel highlight = new JPanel();
+        JPanel manageInfoText = new JPanel();
+        manageInfoText.setLayout(new FlowLayout());
+        
+        JScrollPane textScroll = new JScrollPane(infoText);
+        
+        textScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        textScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
        
-        JLabel hlabel = new JLabel("Difference table");
-        highlight.add(hlabel);
-      
+     
+        
+        
+        JButton clearText = new JButton("Clear info");
+        clearText.addActionListener(new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                infoText.setText("");
+            }
+            
+        });
+        manageInfoText.add(clearText);
+        infoPanel.add(textScroll, BorderLayout.CENTER);
+        infoPanel.add(manageInfoText, BorderLayout.SOUTH);
+        
         mainPanel.add(highlight, BorderLayout.NORTH);
         mainPanel.add(this, BorderLayout.CENTER);
+        mainPanel.add(infoPanel, BorderLayout.SOUTH);
         frame.setContentPane(mainPanel);
         frame.pack();
-        frame.setVisible(true); 
+        frame.setVisible(true);        
     }
     
-    public static void main(String[] args){
-        SwingUtilities.invokeLater(new Runnable(){
-        @Override
-            public void run(){
-            createAndShowGui();
-        }});
-    }
-    
-    class MsgTableListener implements MouseListener{
-
-      JTable tbl = null;
+    class CloseEventsListener implements ActionListener {
         
-        MsgTableListener(JTable tbl){
-            this.tbl = tbl;
+        OmiEventCloser oec = null;
+        
+        public CloseEventsListener() {
+            try {
+                oec = new OmiEventCloser("bsm-gw1.sdab.sn", OmiEventCloser.BSMJBOSSJMXPORT);
+            } catch (IOException ioe) {
+                infoText.append("Error: Could not initializate OmiEventCloser\n" + ioe.getMessage());
+            }
         }
         
         @Override
-        public void mouseClicked(MouseEvent e) {
-            printDebugData(tbl);
+        public void actionPerformed(ActionEvent e) {
+            try {
+                for (int i = 0; i < tableModel.getRowCount(); i++) {
+                    if ((Boolean) tableModel.getValueAt(i, 0)) {
+                        oec.closeIncident((String) tableModel.getValueAt(i, 1), "mshkolny");
+                        infoText.append("Event ID: " + tableModel.getValueAt(i, 1) + "has been Closed\n");
+                        
+                    }
+                }
+            } catch (NullPointerException npe) {
+                infoText.append("Error: OmiEventCloser has been not initialized\n" + npe.getMessage());
+            } catch (MalformedObjectNameException ex) {
+                infoText.append("Error: Malformed JMX object name\n" + ex.getMessage());
+            }
         }
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
+    }
+    
+    class SelectAllEventsListener implements ActionListener {
+        
+        JButton button;
+        boolean select = true;
+        
+        public SelectAllEventsListener(JButton btn) {
+            this.button = btn;
         }
-
+        
         @Override
-        public void mouseReleased(MouseEvent e) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
-        public void mouseEntered(MouseEvent e) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
-        public void mouseExited(MouseEvent e) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        public void actionPerformed(ActionEvent e) {
+            for (int i = 0; i < tableModel.getRowCount(); i++) {
+                tableModel.setValueAt(select, i, 0);
+            }
+            if (select) {
+                button.setText("Deselect all");
+                
+            } else {
+                button.setText("Select all");
+            }
+            select = !select;
         }
         
     }
