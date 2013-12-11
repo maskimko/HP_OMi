@@ -1,4 +1,4 @@
-package emergency
+package production;
 
 import com.hp.opr.api.Version
 import com.hp.opr.api.ws.adapter.*
@@ -322,7 +322,7 @@ public class ServiceManagerAdapter {
 
     // URL paths
     public static final String DRILLDOWN_ROOT_PATH =
-        "/${SM_WEB_TIER_NAME}/index.do?ctx=docEngine&file=probsummary&query=number%3D"
+            "/${SM_WEB_TIER_NAME}/index.do?ctx=docEngine&file=probsummary&query=number%3D"
     public static final String OMI_ROOT_DRILLDOWN_PATH = '/opr-console/opr-evt-details.jsp?eventId='
     public static final String BSM_CI_DRILLDOWN_PATH = '/topaz/dash/nodeDetails.do?cmdbId='
     public static final String ROOT_PATH = '/SM/7/rest/1.1/incident_list'
@@ -380,7 +380,7 @@ public class ServiceManagerAdapter {
     public static final String OPERATIONAL_DEVICE_TAG = 'operational_device'
 
     public static final String IS_CAUSED_BY_ROLE =
-        'urn:x-hp:2009:software:data_model:relationship:incident:is_caused_by:incident'
+            'urn:x-hp:2009:software:data_model:relationship:incident:is_caused_by:incident'
 
     // Constant values
     public static final String IMPACT_LABEL_VALUE = 'Enterprise'
@@ -1019,10 +1019,10 @@ public class ServiceManagerAdapter {
         final String forwardingType = info.forwardingType.toLowerCase()
         if (forwardingType.equals(OprForwardingTypeEnum.synchronize_and_transfer_control.toString())) {
             externalRefId =
-                "urn:x-hp:2009:opr:${m_connectedServerId}:incident|escalated|provider:${event.id}"
+                    "urn:x-hp:2009:opr:${m_connectedServerId}:incident|escalated|provider:${event.id}"
         } else {
             externalRefId =
-                "urn:x-hp:2009:opr:${m_connectedServerId}:incident|informational|requestor:${event.id}"
+                    "urn:x-hp:2009:opr:${m_connectedServerId}:incident|informational|requestor:${event.id}"
         }
         OprIntegerPropertyChange duplicateChange = null
         if (event.duplicateCount > 0) {
@@ -1066,7 +1066,7 @@ public class ServiceManagerAdapter {
 
             // check if this is an incident or a ATOM syndication entry
             final GPathResult respIncident = (xmlResult.name().equals('entry')) ?
-                xmlResult.getProperty('content').getProperty(INCIDENT_TAG) : xmlResult
+                    xmlResult.getProperty('content').getProperty(INCIDENT_TAG) : xmlResult
 
             if (respIncident.name().equals(INCIDENT_TAG)) {
                 // set the ID and drilldown URL path
@@ -1158,7 +1158,7 @@ public class ServiceManagerAdapter {
         // create an OprEvent with the changes
         final OprEvent event = new OprEvent()
         final String eventId = (changes.eventRef.targetGlobalId) ?
-            changes.eventRef.targetGlobalId : changes.eventRef.targetId
+                changes.eventRef.targetGlobalId : changes.eventRef.targetId
         event.id = eventId
 
         OprIntegerPropertyChange duplicateChange = null
@@ -1346,7 +1346,7 @@ public class ServiceManagerAdapter {
 
                         // check if this is an incident or a ATOM syndication entry
                         final GPathResult incident = (xmlResult.name().equals('entry')) ?
-                            xmlResult.getProperty('content')?.getProperty(INCIDENT_TAG) : xmlResult
+                                xmlResult.getProperty('content')?.getProperty(INCIDENT_TAG) : xmlResult
 
                         if (incident != null && incident.name().equals(INCIDENT_TAG)) {
                             String status = incident.getProperty(INCIDENT_STATUS_TAG)?.text()
@@ -1425,7 +1425,7 @@ public class ServiceManagerAdapter {
 
                 // check if this is an incident or a ATOM syndication entry
                 final GPathResult incident = (xmlResult.name().equals('entry')) ?
-                    xmlResult.getProperty('content')?.getProperty(INCIDENT_TAG) : xmlResult
+                        xmlResult.getProperty('content')?.getProperty(INCIDENT_TAG) : xmlResult
 
                 if (incident != null && incident.name().equals(INCIDENT_TAG)) {
                     String status = incident.getProperty(INCIDENT_STATUS_TAG)?.text()
@@ -1476,7 +1476,7 @@ public class ServiceManagerAdapter {
 
                 // check if this is an incident or a ATOM syndication entry
                 final GPathResult incident = (xmlResult.name().equals('entry')) ?
-                    xmlResult.getProperty('content')?.getProperty(INCIDENT_TAG) : xmlResult
+                        xmlResult.getProperty('content')?.getProperty(INCIDENT_TAG) : xmlResult
 
                 if (incident != null && incident.name().equals(INCIDENT_TAG)) {
                     String title = incident.getProperty(TITLE_TAG)?.text()
@@ -1564,7 +1564,7 @@ public class ServiceManagerAdapter {
 
         // check if this is an incident or a ATOM syndication entry
         final GPathResult incident = (xmlResult.name().equals('entry')) ?
-            xmlResult.getProperty('content').getProperty(INCIDENT_TAG) : xmlResult
+                xmlResult.getProperty('content').getProperty(INCIDENT_TAG) : xmlResult
 
         if (incident.name().equals(INCIDENT_TAG)) {
             incident.childNodes().each { child ->
@@ -3626,14 +3626,14 @@ public class ServiceManagerAdapter {
                 businessService2businessService.withMaxNumberOfStepsMatched(RTSM_QUERY_MAX_STEPS).withTargetCardinality(0, QueryLink.UNBOUNDED)
             } else {
                 IndirectLinkStepToPart toPart =
-                    businessService2me.withStep().fromConfigurationItemType().toConfigurationItemType()
+                        businessService2me.withStep().fromConfigurationItemType().toConfigurationItemType()
                 toPart.complexTypeConditionsSet().addComplexTypeCondition().withoutType(TYPE_BUSINESS_SERVICE)
                 toPart.alongTheLink(REL_IMPACT)
                 businessService2me.atLeast(1).atMost(QueryLink.UNBOUNDED)
                 businessService2me.withMaxNumberOfStepsMatched(RTSM_QUERY_MAX_STEPS).withTargetCardinality(1, QueryLink.UNBOUNDED)
 
                 QueryNode relBusinessServiceNode =
-                    queryDefinition.addNode("Business Service Related").ofType(TYPE_BUSINESS_SERVICE)
+                        queryDefinition.addNode("Business Service Related").ofType(TYPE_BUSINESS_SERVICE)
                 relBusinessServiceNode.queryProperties(ATTR_GLOBAL_ID, ATTR_NAME, ATTR_LABEL, ATTR_BUSINESS_CRITICALITY)
 
                 IndirectLink businessService2businessService = relBusinessServiceNode.indirectlyLinkedTo(businessServiceNode)
@@ -3718,7 +3718,7 @@ public class ServiceManagerAdapter {
 
         if (nodeRef?.node?.any == null || nodeRef.node.any.empty) {
             return (relatedCi?.configurationItem != null) ?
-                relatedCi.configurationItem.getProperty(NODE_DNS_NAME_TAG) : null
+                    relatedCi.configurationItem.getProperty(NODE_DNS_NAME_TAG) : null
         } else {
             if (m_oprVersion > 913)
                 return nodeRef.node.getProperty(NODE_DNS_NAME_TAG)
@@ -3746,7 +3746,7 @@ public class ServiceManagerAdapter {
         } else if (propValue instanceof byte[]) {
             TopologyUpdateFactory topologyUpdateFactory = ucmdbService?.topologyUpdateService?.factory
             return (topologyUpdateFactory == null) ?
-                null : topologyUpdateFactory.restoreCIIdFromBytes((byte[]) propValue).asString
+                    null : topologyUpdateFactory.restoreCIIdFromBytes((byte[]) propValue).asString
         } else if (propValue instanceof UcmdbId) {
             return ((UcmdbId) propValue).asString
         } else {
