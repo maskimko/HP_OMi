@@ -1,6 +1,8 @@
 package production;
 
 import com.hp.opr.api.Version
+import com.hp.opr.api.event.types.Severity
+import com.hp.opr.api.scripting.Priority
 import com.hp.opr.api.ws.adapter.*
 import com.hp.opr.api.ws.model.event.*
 import com.hp.opr.api.ws.model.event.ci.*
@@ -74,7 +76,8 @@ public class ServiceManagerAdapter {
 
     // Maps the SM incident 'status' to OPR event 'state'
     //
-    public static final Map MapSM2OPRState = ["accepted": "open", "assigned": "open", "open": "open", "reopened": "open",
+    public static
+    final Map MapSM2OPRState = ["accepted": "open", "assigned": "open", "open": "open", "reopened": "open",
             "pending-change": "in_progress", "pending-customer": "in_progress", "pending-other": "in_progress",
             "pending-vendor": "in_progress", "referred": "in_progress", "suspended": "in_progress",
             "work-in-progress": "in_progress", "rejected": "resolved", "replaced-problem": "resolved",
@@ -91,8 +94,8 @@ public class ServiceManagerAdapter {
 
     // Maps OPR event 'priority' to SM incident 'priority'
     //
-    public static final Map MapOPR2SMPriority = ["highest": "1", "high": "2", "medium": "3", "low": "4",
-            "lowest": "4", "none": "4"]
+    public static
+    final Map MapOPR2SMPriority = ["highest": "1", "high": "2", "medium": "3", "low": "4", "lowest": "4", "none": "4"]
 
     // Maps SM incident 'priority' to OPR event 'priority'
     //
@@ -143,7 +146,8 @@ public class ServiceManagerAdapter {
     // If synchronization on change is desired for an OPR event property, add the property to the list. It will
     // then be synchronized to a corresponding SM property whenever the event property is changed in OMi.
     //
-    public static final Set SyncOPRPropertiesToSM = ["state", "solution", "cause", "custom_attribute", "operational_device", "event_addon"]
+    public static
+    final Set SyncOPRPropertiesToSM = ["state", "solution", "cause", "custom_attribute", "operational_device", "event_addon"]
 
     // OPR event properties to synchronize to a corresponding SM Incident "activity log" on change:
     //
@@ -156,7 +160,7 @@ public class ServiceManagerAdapter {
 
 
     public static final Set SyncOPRPropertiesToSMActivityLog = ["title", "description", "state", "severity", "priority",
-            "annotation", "duplicate_count", "cause", "symptom", "assigned_user", "assigned_group", "custom_attribute", "event_addon"]
+            "annotation", "duplicate_count", "cause", "symptom", "assigned_user", "assigned_group",  "CustomAlertID", "CustomMgmtGrp", "CustomTitle", "CustomPriority", "CustomDescription"]
 
     // SM Incident properties to synchronize to a corresponding OPR Event property on change:
     //
@@ -167,7 +171,8 @@ public class ServiceManagerAdapter {
     //
 
     //TODO check Opr or SM syntax of field Event Addon
-    public static final Set SyncSMPropertiesToOPR = ["incident_status", "solution", "operational_device", "event_addon", "custom_attribute"]
+    public static
+    final Set SyncSMPropertiesToOPR = ["incident_status", "solution", "operational_device", "event_addon", "custom_attribute"]
 
     // OPR event states to synchronize to the SM incident status on change.
     //
@@ -212,13 +217,15 @@ public class ServiceManagerAdapter {
     // NOTE: Only top-level SM incident properties are supported in this map.
     // EXAMPLE: ["MyCustomCA" : "activity_log", "MyCustomCA_1" : "SMCustomAttribute" ]
     //public static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": ASTL_OPERATIONAL_DEVICE_TAG, "operational_device": ACTIVITY_LOG_TAG, "event_addon": "EventAddon", "event_addon": ACTIVITY_LOG_TAG ]
-    public static final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice", "event_addon": "EventAddon"]
+    public static  final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice"]
+    //final Map<String, String> MapOPR2SMCustomAttribute = ["operational_device": "OperationalDevice", "event_addon": "EventAddon", "CustomAlertID": "CustomAlertID", "CustomMgmtGrp": "CustomMgmtGrp", "CustomTitle": "CustomTitle", "CustomPriority": "CustomPriority", "CustomDescription":"CustomDescription"]
 
     // Map the specified SM incident properties to an OPR event custom attribute for synchronization.
     // Add an SM incident property name to the map along with OPR event custom attribute name.
     //
     // EXAMPLE: ["incident_status" : "SMIncidentStatus"]
-    public static final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device", "EventAddon": "event_addon"]
+    public static final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device"]
+    //final Map<String, String> MapSM2OPRCustomAttribute = ["OperationalDevice": "operational_device", "EventAddon": "event_addon", "CustomAlertID": "CustomAlertID", "CustomMgmtGrp": "CustomMgmtGrp", "CustomTitle": "CustomTitle", "CustomPriority": "CustomPriority", "CustomDescription":"CustomDescription"]
     // **********************************************************************
     // * END Configuration: Customization of properties for synchronization *
     // **********************************************************************
@@ -246,9 +253,6 @@ public class ServiceManagerAdapter {
     // In SM the description is a required attribute. In case it is not set in BSM this value is taken.
     // An empty string is NOT allowed.
     public static final String EMPTY_DESCRIPTION_OVERRIDE = "<none>"
-
-
-
 
 
     public String astl_operational_device = "false"
@@ -445,7 +449,8 @@ public class ServiceManagerAdapter {
 
     // Sync 'all' boolean flags
     public final boolean syncAllOPRPropertiesToSM = SyncAllProperties || SyncOPRPropertiesToSM.contains("*")
-    public final boolean syncAllOPRPropertiesToSMActivityLog = SyncAllProperties || SyncOPRPropertiesToSMActivityLog.contains("*")
+    public
+    final boolean syncAllOPRPropertiesToSMActivityLog = SyncAllProperties || SyncOPRPropertiesToSMActivityLog.contains("*")
     public final boolean syncAllOPRStatesToSM = SyncAllProperties || SyncOPRStatesToSM.contains("*")
     public final boolean syncAllOPRSeveritiesToSM = SyncAllProperties || SyncOPRSeveritiesToSM.contains("*")
     public final boolean syncAllOPRPrioritiesToSM = SyncAllProperties || SyncOPRPrioritiesToSM.contains("*")
@@ -463,17 +468,17 @@ public class ServiceManagerAdapter {
     /**
      * This method returns CI logical name
      * according to ASTELIT rules
-     * @param currentEvent      source event of CI
+     * @param currentEvent source event of CI
      * @param currentAstlLogicalName CI name that has been modified by ASTELIT custom rules
      * @param eventLog logger to log method processing
      * @param lineNumber Put here line number just for reference in code
-     * @return   CI name
+     * @return CI name
      */
-    private String ciResolver(OprEvent currentEvent, String currentAstlLogicalName, Log eventLog, int lineNumber){
+    private String ciResolver(OprEvent currentEvent, String currentAstlLogicalName, Log eventLog, int lineNumber) {
 
 
-        if(eventLog.isDebugEnabled()){
-            eventLog.debug("Diving into ciResolver method from line number " +lineNumber);
+        if (eventLog.isDebugEnabled()) {
+            eventLog.debug("Diving into ciResolver method from line number " + lineNumber);
         }
         String ciNameToReturn = null;
 
@@ -484,20 +489,23 @@ public class ServiceManagerAdapter {
 
         String fqdn = getDnsName(currentEvent);
 
-        if(eventLog.isDebugEnabled()){
+        if (eventLog.isDebugEnabled()) {
             eventLog.debug("We got CI name " + currentAstlLogicalName + " from node fqdn " + fqdn);
             eventLog.debug("Determined CI was " + currentCiName);
         }
 
+        if (currentAstlLogicalName != null) {
+            if (fqdn.contains(currentAstlLogicalName)) {
+                ciNameToReturn = fqdn;
+            } else {
+                ciNameToReturn = currentAstlLogicalName;
 
-        if (fqdn.contains(currentAstlLogicalName)){
-            ciNameToReturn = fqdn;
+            }
         } else {
-            ciNameToReturn = currentAstlLogicalName;
-
+            ciNameToReturn = fqdn;
         }
         if (eventLog.isDebugEnabled()) {
-            if (!currentCiName.equals(currentAstlLogicalName)){
+            if (!currentCiName.equals(currentAstlLogicalName)) {
                 eventLog.debug("So CI has been remapped");
             }
             eventLog.debug("And we choose " + ciNameToReturn);
@@ -506,7 +514,6 @@ public class ServiceManagerAdapter {
         return ciNameToReturn;
 
     }
-
 
 
     private void debugOprEvent(OprEvent event, Log eventDebugLog, int lineNumber) {
@@ -670,11 +677,6 @@ public class ServiceManagerAdapter {
         }
 
     }
-
-
-
-
-
 
 
     public synchronized void init(final InitArgs args) {
@@ -1146,7 +1148,8 @@ public class ServiceManagerAdapter {
         return result
     }
     //TODO debug this method
-    private Boolean sendChange(def args, OprEventChange changes, String externalRefId, PasswordAuthentication credentials) {
+    private Boolean sendChange(
+            def args, OprEventChange changes, String externalRefId, PasswordAuthentication credentials) {
         Boolean anyAttributeWasChanged = false
         if (m_log.isDebugEnabled())
             m_log.debug("forwardChange() for incident <${externalRefId}>")
@@ -1708,7 +1711,6 @@ public class ServiceManagerAdapter {
             final OprRelatedCi relatedCi_temp = event.relatedCi
             astl_related_ci = relatedCi_temp.configurationItem.ciName
 
-
             //## Rule 1:
             //## RFC C21126: "OVO Agent is using too many system resources" events ##
             if (event.category == "Performance" && event.application == "HP OSSPI" && event.object == "CPU_ovagent") {
@@ -2089,31 +2091,99 @@ public class ServiceManagerAdapter {
 
             //## Rule 24
             //####################### SCOM Events ###################################
-            if (event.category == "SCOM") {
-                Pattern pName = Pattern.compile("Name=(.*)")
-                Pattern pDescription = Pattern.compile("Description=(.*)Name=", Pattern.DOTALL)
 
-                Matcher mName = pName.matcher(event.title)
-                Matcher mDescription = pDescription.matcher(event.title)
+            if (event.getCategory().equals("SCOM")) {
 
-                if (mName.find()) {
-                    astl_title = mName[0][1]
+                OprCustomAttributeList eventAttrList = event.getCustomAttributes();
+                if (m_log.isDebugEnabled()) {
+                    m_log.debug("SCOM rules section:");
+                    m_log.debug("Event OprCustomAttributeList is: " + eventAttrList);
+                    if (eventAttrList != null) {
+                        m_log.debug("and it is not null!");
+                    } else {
+                        m_log.debug("and it is null! Problem here!")
+                    }
                 }
+                try {
+                    ArrayList<OprCustomAttribute> caList = eventAttrList.getCustomAttributes();
+                    OprCustomAttribute customPriority = null;
+                    OprCustomAttribute customTitle = null;
+                    OprCustomAttribute customDescription = null;
+                    for (OprCustomAttribute ca : caList) {
+                        if (ca.getName().equals("CustomPriority")) {
+                            customPriority = ca;
+                        } else if (ca.getName().equals("CustomTitle")) {
+                            customTitle = ca;
+                        } else if (ca.getName().equals("CustomDescription"))
+                        {
+                            customDescription = ca;
+                        }                    }
 
-                if (mDescription.find()) {
-                    astl_description = mDescription[0][1].replace("\\u001a", '')
+                    if (m_log.isDebugEnabled()) {
+
+                        m_log.debug("Event severity is " + event.getSeverity());
+                    }
+                    
+                    astl_description = customDescription.getValue();
+                    astl_title = customTitle.getValue();
+                    event.setTitle(astl_title);
+                    event.setDescription(astl_description);
+                    if (event.getSeverity().toLowerCase().equals("critical")) {
+                        if (customPriority.getValue().toLowerCase().equals("high")) {
+                            event.setSeverity("major");
+                            event.setPriority("high");
+                        } else if (customPriority.getValue().toLowerCase().equals("medium") || customPriority.getValue().toLowerCase().equals("normal")) {
+                            event.setSeverity("minor");
+                            event.setPriority("medium");
+                        } else if (customPriority.getValue().toLowerCase().equals("low")) {
+                            event.setSeverity("warning");
+                            event.setPriority("low");
+                        }
+                    } else if (event.getSeverity().toLowerCase().equals("warning")) {
+                        if (customPriority.getValue().toLowerCase().equals("high")) {
+                            event.setSeverity("minor");
+                            event.setPriority("medium");
+                        } else if (customPriority.getValue().toLowerCase().equals("medium") || customPriority.getValue().toLowerCase().equals("normal")) {
+                            event.setSeverity("minor");
+                            event.setPriority("medium");
+                        } else if  (customPriority.getValue().toLowerCase().equals("low")) {
+                            event.setSeverity("warning");
+                            event.setPriority("low");
+                        }
+                    }
+                } catch (NullPointerException npe){
+                    event.setDescription(event.getDescription() + "Cannot Parse custom attributes" + npe.getMessage());
+                    if (m_log.isDebugEnabled()) {
+
+                        m_log.debug("SCOM processing error: " + npe.getStackTrace());
+                    }
                 }
+                /*
+                  if (event.category == "SCOM") {
+                      Pattern pName = Pattern.compile("Name=(.*)")
+                      Pattern pDescription = Pattern.compile("Description=(.*)Name=", Pattern.DOTALL)
 
-                if (MapOPR2SMUrgency[event.severity] == "2")
-                    astl_priority = "2"
+                      Matcher mName = pName.matcher(event.title)
+                      Matcher mDescription = pDescription.matcher(event.title)
 
-                if (MapOPR2SMUrgency[event.severity] == "3")
-                    astl_priority = "3"
+                      if (mName.find()) {
+                          astl_title = mName[0][1]
+                      }
 
-                if (MapOPR2SMUrgency[event.severity] == "4")
-                    astl_priority = "4"
+                      if (mDescription.find()) {
+                          astl_description = mDescription[0][1].replace("\\u001a", '')
+                      }
 
-                default_flag = false
+                      if (MapOPR2SMUrgency[event.severity] == "2")
+                          astl_priority = "2"
+
+                      if (MapOPR2SMUrgency[event.severity] == "3")
+                          astl_priority = "3"
+
+                      if (MapOPR2SMUrgency[event.severity] == "4")
+                          astl_priority = "4"
+      */
+                default_flag = true;
             }
             //############################ END Rule 24 ######################################
 
@@ -2338,13 +2408,10 @@ public class ServiceManagerAdapter {
             }
             //############################ END Rule 35 ######################################
 
-
-
             //Decide which name we would use
 
 
             astl_logical_name = ciResolver(event, astl_logical_name, m_log, 2388);
-
 
             //Add custom attributes
 
@@ -3548,8 +3615,6 @@ public class ServiceManagerAdapter {
 
 
     }
-
-
 
 
     private void setBusinessService(OprEvent event, MarkupBuilder builder, StringBuffer activityLog) {
