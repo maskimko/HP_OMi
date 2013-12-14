@@ -518,10 +518,15 @@ public class ServiceManagerAdapter {
 
     private void debugOprEvent(OprEvent event, Log eventDebugLog, int lineNumber) {
         eventDebugLog.debug("Getting custom attributes from event (line number " + lineNumber + ")");
-        ArrayList<OprCustomAttribute> debugEventCustomAttributeList = event.getCustomAttributes().getCustomAttributes();
+       OprCustomAttributeList caList = event.getCustomAttributes();
+        if (caList != null){
+        ArrayList<OprCustomAttribute> debugEventCustomAttributeList = caList.getCustomAttributes();
         for (OprCustomAttribute debugCustAttrItem : debugEventCustomAttributeList) {
             eventDebugLog.debug("Contains attribute name: " + debugCustAttrItem.getName() + " and value: " + debugCustAttrItem.getValue());
         }
+    } else {
+        eventDebugLog.debug("Event has no custom attributes");
+    }
     }
 
 
@@ -2123,33 +2128,72 @@ public class ServiceManagerAdapter {
 
                         m_log.debug("Event severity is " + event.getSeverity());
                     }
-                    
-                    astl_description = customDescription.getValue();
-                    astl_title = customTitle.getValue();
+
+                    if (customDescription != null){astl_description = customDescription.getValue();
+                    } else {
+                        customDescription = new OprCustomAttribute("CustomDescription", "OMi cannot parse description");
+                        if (m_log.isDebugEnabled()){
+                            m_log.debug("Custom attribute customDescription has been not parsed and has been generated with value: " +customDescription.getValue());
+                        }
+                    }
+
+                            if (customTitle != null) {
+                                astl_title = customTitle.getValue();
+                            } else {
+                                customDescription = new OprCustomAttribute("CustomTitle", "OMi cannot parse title");
+                                if (m_log.isDebugEnabled()){
+                                    m_log.debug("Custom attribute customTitle has been not parsed and has been generated with value: "+customTitle.getValue());
+                                }
+                            }
+                    if (customPriority == null) {
+                        customPriority = new OprCustomAttribute("CustomPriority", "Medium");
+                        if (m_log.isDebugEnabled()){
+                            m_log.debug("Custom attribute customPriority has been not parsed and has been generated with value: " + customPriority.getValue());
+                        }
+                    }
+
                     event.setTitle(astl_title);
                     event.setDescription(astl_description);
+                   if (m_log.isDebugEnabled()){
+                       m_log.debug("Custom attribute customPriority value: " + customPriority.getValue());
+                   }
+
                     if (event.getSeverity().toLowerCase().equals("critical")) {
                         if (customPriority.getValue().toLowerCase().equals("high")) {
                             event.setSeverity("major");
                             event.setPriority("high");
+                            astl_priority = "2";
                         } else if (customPriority.getValue().toLowerCase().equals("medium") || customPriority.getValue().toLowerCase().equals("normal")) {
                             event.setSeverity("minor");
                             event.setPriority("medium");
+                            astl_priority = "3";
                         } else if (customPriority.getValue().toLowerCase().equals("low")) {
                             event.setSeverity("warning");
                             event.setPriority("low");
+                            astl_priority = "4";
                         }
+                        if (m_log.isDebugEnabled()){
+                            m_log.debug("astl _priority has  value: " + astl_priority);
+                        }
+                        event.setSeverity(MapOPR2SMUrgency[event.severity]);
                     } else if (event.getSeverity().toLowerCase().equals("warning")) {
                         if (customPriority.getValue().toLowerCase().equals("high")) {
                             event.setSeverity("minor");
                             event.setPriority("medium");
+                            astl_priority = "3";
                         } else if (customPriority.getValue().toLowerCase().equals("medium") || customPriority.getValue().toLowerCase().equals("normal")) {
                             event.setSeverity("minor");
                             event.setPriority("medium");
+                            astl_priority = "3";
                         } else if  (customPriority.getValue().toLowerCase().equals("low")) {
                             event.setSeverity("warning");
                             event.setPriority("low");
+                            astl_priority = "4";
                         }
+                        if (m_log.isDebugEnabled()){
+                            m_log.debug("astl _priority has  value: " + astl_priority);
+                        }
+                        event.setSeverity(MapOPR2SMUrgency[event.severity]);
                     }
                 } catch (NullPointerException npe){
                     event.setDescription(event.getDescription() + "Cannot Parse custom attributes" + npe.getMessage());
@@ -2183,7 +2227,7 @@ public class ServiceManagerAdapter {
                       if (MapOPR2SMUrgency[event.severity] == "4")
                           astl_priority = "4"
       */
-                default_flag = true;
+                default_flag = false;
             }
             //############################ END Rule 24 ######################################
 
@@ -2468,12 +2512,11 @@ public class ServiceManagerAdapter {
                 builder.incident_type(INCIDENT_TYPE)
                 if (SpecifyActiveProcess)
                     builder.active_process("true")
-                //TODO Move this to custom attribute
 
-                // builder."${OPERATIONAL_DEVICE_TAG}"(astl_operational_device)
 
                 activityLog.append('\n').append(ACTIVITY_LOG_OPERATIONAL_DATA).append('\n').
                         append(astl_operational_device).append('\n')
+
 
                 if (astl_priority) {
                     if (astl_priority == "1") {
@@ -2503,6 +2546,7 @@ public class ServiceManagerAdapter {
                     }
                 }
 
+
                 if (isNewIncident) {
                     // Add 'Time OMi Event Created' to activity log
                     if (event.timeCreated) {
@@ -2521,10 +2565,11 @@ public class ServiceManagerAdapter {
                     final OprNodeReference nodeRef = event.node
                     final OprRelatedCi relatedCi = event.relatedCi
                     final String dnsName = getDnsName(event)
-                    // Astelit's Default Related CI Name
-                    String astelitRelatedCI = relatedCi.configurationItem.ciName
+
 
                     if (relatedCi != null && !UseNodeCI) {
+                        // Astelit's Default Related CI Name
+                        String astelitRelatedCI = relatedCi.configurationItem.ciName
                         // send 'is_registered_for' CI information using event related CI
                         builder."${CI_RELATIONSHIP}"(target_role: "${CONFIGURATION_ITEM_ROLE}") {
                             if (relatedCi.configurationItem.globalId)
@@ -2824,7 +2869,7 @@ public class ServiceManagerAdapter {
                             && (isNewIncident
                             || ((syncAllOPRPropertiesToSM || SyncOPRPropertiesToSM.contains("severity"))
                             && (syncAllOPRSeveritiesToSM || SyncOPRSeveritiesToSM.contains(astl_priority)))))
-                        builder."${URGENCY_TAG}"(astl_priority)
+                        builder."${URGENCY_TAG}"(MapOPR2SMUrgency.get(  event.getSeverity()));
 
                     if (astl_priority
                             && (syncAllOPRPropertiesToSMActivityLog || SyncOPRPropertiesToSMActivityLog.contains("severity"))) {
@@ -2836,6 +2881,11 @@ public class ServiceManagerAdapter {
                         activityLog.append(event.severity)
                         activityLog.append('\n')
                     }
+                   /* if (event.priority
+                            && (isNewIncident
+                            || ((syncAllOPRPropertiesToSM || SyncOPRPropertiesToSM.contains("priority"))
+                            && (syncAllOPRPrioritiesToSM || SyncOPRPrioritiesToSM.contains(event.priority)))))
+                        builder."${PRIORITY_TAG}"(MapOPR2SMPriority[event.priority])*/
                 } else {
                     if (MapOPR2SMUrgency[event.severity] == "1") {
                         astl_urgency = "2"
@@ -2849,6 +2899,11 @@ public class ServiceManagerAdapter {
                     if (MapOPR2SMUrgency[event.severity] == "4") {
                         astl_urgency = "4"
                     }
+                    /*if (event.priority
+                            && (isNewIncident
+                            || ((syncAllOPRPropertiesToSM || SyncOPRPropertiesToSM.contains("priority"))
+                            && (syncAllOPRPrioritiesToSM || SyncOPRPrioritiesToSM.contains(event.priority)))))
+                        builder."${PRIORITY_TAG}"(MapOPR2SMPriority[event.priority])*/
 
                     if (astl_urgency
                             && (isNewIncident
@@ -2874,6 +2929,7 @@ public class ServiceManagerAdapter {
                 //|| ((syncAllOPRPropertiesToSM || SyncOPRPropertiesToSM.contains("priority"))
                 //&& (syncAllOPRPrioritiesToSM || SyncOPRPrioritiesToSM.contains(event.priority)))))
                 //builder."${PRIORITY_TAG}"(MapOPR2SMPriority[event.priority])
+
 
                 if (event.priority
                         && (syncAllOPRPropertiesToSMActivityLog || SyncOPRPropertiesToSMActivityLog.contains("priority"))) {
