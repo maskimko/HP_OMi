@@ -13,18 +13,19 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.management.MalformedObjectNameException;
+import java.util.TreeSet;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.table.TableModel;
+import javax.swing.SwingWorker;
 
 /**
  *
@@ -36,6 +37,7 @@ public class MessageTable extends JPanel {
     MessageTableModel tableModel = null;
     JTable msgTable = null;
     private JTextArea infoText = null;
+    private JProgressBar progressBar = null;
     
     public MessageTable(MessageTableModel mtm) {
         super(new GridLayout(1, 0));
@@ -107,33 +109,76 @@ public class MessageTable extends JPanel {
     class CloseEventsListener implements ActionListener {
         
         OmiEventCloser oec = null;
-        
+       
         public CloseEventsListener() {
+           
+            
             try {
-                oec = new OmiEventCloser("bsm-gw1.sdab.sn", OmiEventCloser.BSMJBOSSJMXPORT);
+                oec = new OmiEventCloser("bsm-gw1.sdab.sn", OmiEventCloser.BSMJBOSSJMXPORT, eventIds, "mshkolny", infoText);
             } catch (IOException ioe) {
                 infoText.append("Error: Could not initializate OmiEventCloser\n" + ioe.getMessage());
             }
         }
         
+        
+       
+        
         @Override
         public void actionPerformed(ActionEvent e) {
-            try {
-                for (int i = 0; i < tableModel.getRowCount(); i++) {
-                    if ((Boolean) tableModel.getValueAt(i, 0)) {
-                        oec.closeIncident((String) tableModel.getValueAt(i, 1), "mshkolny");
-                        infoText.append("Event ID: " + tableModel.getValueAt(i, 1) + "has been Closed\n");
-                        
-                    }
-                }
-            } catch (NullPointerException npe) {
-                infoText.append("Error: OmiEventCloser has been not initialized\n" + npe.getMessage());
-            } catch (MalformedObjectNameException ex) {
-                infoText.append("Error: Malformed JMX object name\n" + ex.getMessage());
-            }
+           
+            
+        
+                Thread eventCloseWorker = new Thread(oec);
+                eventCloseWorker.run();
         }
         
     }
+    
+    
+    class ClosingProgressBar extends JPanel implements PropertyChangeListener {
+
+        public ClosingProgressBar(){
+            super(new BorderLayout());
+            
+            progressBar = new JProgressBar(0, 100);
+            progressBar.setValue(0);
+            progressBar.setStringPainted(true);
+        }
+        
+        
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+         
+        
+
+    }
+    
+   class EventPrepare extends SwingWorker<Void, Void> {
+
+       TreeSet<String> eventIds = new TreeSet<String>();
+       
+        @Override
+        protected Void doInBackground() throws Exception {
+            infoText.append("Preparing events for closing...\n");
+            for (int i = 0; i < tableModel.getRowCount(); i++) {
+                    int progress  = 0;
+                    setProgress(progress);
+                
+                if ((Boolean) tableModel.getValueAt(i, 0)) {
+                       
+                        eventIds.add((String) tableModel.getValueAt(i, 1));
+                        progress = i * 100 / tableModel.getRowCount();
+                        setProgress(progress);
+                    }
+                }
+            infoText.append("Events are ready for closing\n");
+            return null;
+        }
+       
+   }
     
     class SelectAllEventsListener implements ActionListener {
         
