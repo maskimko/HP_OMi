@@ -33,6 +33,7 @@ public class DiffActiveMessages {
 					diff.add(msg);
 				}
 			}
+                    
 			System.out.println("Difference is: " + diff.size());
                         System.out.println("Loading GUI...");
                         MessageTable mt = new MessageTable(new MessageTableModel(diff));

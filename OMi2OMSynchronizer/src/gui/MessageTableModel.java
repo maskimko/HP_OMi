@@ -28,7 +28,7 @@ public class MessageTableModel extends AbstractTableModel {
     
     
     */
-    Vector<MessageRow> data;
+      Vector<MessageRow> data;
     
     public MessageTableModel(Object[][] data){
         MessageRow mr = null;
@@ -103,4 +103,10 @@ public class MessageTableModel extends AbstractTableModel {
             return false;
         }
     }
+        
+        
+        public void deleteRow(int rowNumber){
+            data.remove(rowNumber);
+            fireTableRowsDeleted(rowNumber, rowNumber);
+        }
 }
